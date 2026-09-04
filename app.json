@@ -17,22 +17,14 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.cajita.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": true,
-        "NSUbiquitousContainers": {
-          "iCloud.com.cajita.app": {
-            "NSUbiquitousContainerIsDocumentScopePublic": true,
-            "NSUbiquitousContainerSupportedFolderLevels": "Any",
-            "NSUbiquitousContainerName": "Cajita"
-          }
-        }
-      },
-      "usesIcloudStorage": true
+        "ITSAppUsesNonExemptEncryption": true
+      }
     },
     "android": {
       "package": "com.cajita.app",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#2E9E6B",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -43,7 +35,6 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "./plugins/withCajitaEntitlements",
       [
         "expo-sqlite",
         {

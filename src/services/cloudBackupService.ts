@@ -19,6 +19,15 @@ import type { SQLiteDatabase } from 'expo-sqlite';
  * Solo funciona en iOS con build nativa (expo prebuild / EAS). En Android y web no-op.
  */
 
+/**
+ * Interruptor maestro de la copia en iCloud. `false` mientras falten:
+ *   1. el módulo nativo `CajitaCloudSync` (Swift, contenedor de ubiquity),
+ *   2. los entitlements de iCloud en `app.json` + `plugins/withCajitaEntitlements`,
+ *   3. iCloud + contenedor `iCloud.com.cajita.app` habilitados en Apple Developer.
+ * Con `false` la UI de backup no se muestra y no se agenda ningún backup.
+ */
+export const CLOUD_BACKUP_ENABLED = false;
+
 const REMOTE_NAME = 'cajita.db';
 const CACHE_NAME = 'cajita-backup.db';
 const LAST_BACKUP_KEY = 'cajita_last_backup_v1';
@@ -58,6 +67,7 @@ function dbFile(): File {
  * a segundo plano. Llamar una vez al arranque, tras `setDbKey`.
  */
 export function initCloudBackup(): void {
+  if (!CLOUD_BACKUP_ENABLED) return;
   if (initialized) return;
   initialized = true;
   setOnDbWrite(() => scheduleCloudBackup(getDb()));
@@ -107,6 +117,7 @@ export interface BackupResult {
  * (p. ej. una reinstalación sin restaurar todavía).
  */
 export async function backupNow(db: SQLiteDatabase): Promise<BackupResult> {
+  if (!CLOUD_BACKUP_ENABLED) return { ok: false, reason: 'disabled' };
   if (Platform.OS !== 'ios') return { ok: false, reason: 'not-ios' };
   if (running) return { ok: true, reason: 'in-progress' };
   const mod = getNative();
@@ -152,6 +163,7 @@ export async function getLastBackupAt(): Promise<number | null> {
 }
 
 export async function isCloudBackupAvailable(): Promise<boolean> {
+  if (!CLOUD_BACKUP_ENABLED) return false;
   const mod = getNative();
   if (!mod) return false;
   try {
@@ -166,6 +178,7 @@ export async function isCloudBackupAvailable(): Promise<boolean> {
  * no existe (celular nuevo / reinstalación) y existe un backup en iCloud.
  */
 export async function restoreCloudBackupIfNeeded(): Promise<{ restored: boolean; reason: string }> {
+  if (!CLOUD_BACKUP_ENABLED) return { restored: false, reason: 'disabled' };
   if (Platform.OS !== 'ios') return { restored: false, reason: 'not-ios' };
   const mod = getNative();
   if (!mod) return { restored: false, reason: 'no-native' };
@@ -187,6 +200,7 @@ export async function restoreCloudBackupIfNeeded(): Promise<{ restored: boolean;
  * (cierra la conexión primero). El llamador debe refrescar la app tras esto.
  */
 export async function restoreCloudBackupNow(): Promise<{ restored: boolean; reason: string }> {
+  if (!CLOUD_BACKUP_ENABLED) return { restored: false, reason: 'disabled' };
   if (Platform.OS !== 'ios') return { restored: false, reason: 'not-ios' };
   const mod = getNative();
   if (!mod) return { restored: false, reason: 'no-native' };

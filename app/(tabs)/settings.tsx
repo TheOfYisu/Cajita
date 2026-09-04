@@ -15,6 +15,7 @@ import {
   restoreCloudBackupNow,
   getLastBackupAt,
   isCloudBackupAvailable,
+  CLOUD_BACKUP_ENABLED,
 } from '@/src/services/cloudBackupService';
 
 export default function SettingsScreen() {
@@ -119,7 +120,9 @@ export default function SettingsScreen() {
         { icon: 'download', label: 'Importar CSV', onPress: () => router.push('/import') },
         { icon: 'share-outline', label: 'Exportar movimientos (CSV)', onPress: onExportCsv },
         { icon: 'archive', label: 'Exportar backup (JSON)', onPress: onExportBackup },
-        { icon: 'cloud-download', label: 'Restaurar desde iCloud', hint: hasCloudBackup ? 'Reemplaza los datos con el backup guardado' : 'No hay backup en iCloud todavía', onPress: onRestore },
+        ...(CLOUD_BACKUP_ENABLED
+          ? [{ icon: 'cloud-download' as IconName, label: 'Restaurar desde iCloud', hint: hasCloudBackup ? 'Reemplaza los datos con el backup guardado' : 'No hay backup en iCloud todavía', onPress: onRestore }]
+          : []),
       ],
     },
     {
@@ -134,22 +137,24 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <Card onPress={onBackup} style={{ marginBottom: 16 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Ionicons name="cloud-upload-outline" size={24} color={colors.transfer} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }}>Copia de seguridad iCloud</Text>
-            <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}>
-              {lastBackup ? `Último backup: ${new Date(lastBackup).toLocaleString('es-CO')}` : 'Sin backup todavía'}
-              {totalPending > 0 ? ` · ${totalPending} cambios pendientes` : ''}
-            </Text>
-            <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}>
-              Automática en cada cambio · toca para subir ahora
-            </Text>
+      {CLOUD_BACKUP_ENABLED ? (
+        <Card onPress={onBackup} style={{ marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Ionicons name="cloud-upload-outline" size={24} color={colors.transfer} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }}>Copia de seguridad iCloud</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}>
+                {lastBackup ? `Último backup: ${new Date(lastBackup).toLocaleString('es-CO')}` : 'Sin backup todavía'}
+                {totalPending > 0 ? ` · ${totalPending} cambios pendientes` : ''}
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}>
+                Automática en cada cambio · toca para subir ahora
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-        </View>
-      </Card>
+        </Card>
+      ) : null}
 
       {sections.map((s) => (
         <View key={s.title} style={{ marginBottom: 16 }}>
