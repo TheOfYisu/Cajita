@@ -17,7 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.cajita.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": true
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
