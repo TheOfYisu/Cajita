@@ -9,7 +9,7 @@
     "scheme": "cajita",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/icon.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#2E9E6B"
     },
