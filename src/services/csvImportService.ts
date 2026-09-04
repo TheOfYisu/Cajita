@@ -56,7 +56,7 @@ const TYPE_ALIASES: Record<string, string> = {
 };
 
 export function parseCsv(text: string): Row[] {
-  const lines = text.split(/\r?\n/);
+  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/);
   if (lines.length < 2) return [];
   const header = lines[0].toLowerCase();
   const keys = {
@@ -209,6 +209,48 @@ export function clearAllData(): void {
 }
 
 export type ImportMode = 'replace' | 'merge';
+
+/**
+ * Genera un CSV de plantilla con todas las columnas soportadas y un par de filas
+ * de ejemplo comentadas en las notas, para que el usuario sepa cómo llenarlo.
+ */
+export function generateTemplateCsv(): string {
+  const body = templateBody();
+  return CSV_BOM + body;
+}
+
+function templateBody(): string {
+  const headers = [
+    'flow_title', 'flow_notes', 'flow_account_name', 'flow_account_type',
+    'flow_account_credit_limit', 'flow_account_is_primary', 'flow_account_maturity_date',
+    'flow_account_expected_yield', 'flow_transfer_to', 'flow_transfer_to_type',
+    'flow_amount', 'flow_date_of_transaction', 'flow_category_optional',
+    'flow_loan', 'flow_loan_type', 'flow_loan_kind',
+    'flow_person_name', 'flow_person_phone', 'flow_person_email',
+    'flow_person_identification', 'flow_person_notes',
+  ].join(',');
+  const rows = [
+    // Balance inicial
+    ['Balance inicial', 'Saldo inicial de la cuenta', 'Mi Banco', 'bank', '', '1', '', '', '', '', '-1000000.0', '2025-01-01', 'Balance Inicial', '', '', '', '', '', '', '', ''].join(','),
+    // Gasto normal
+    ['Supermercado', 'Compra del mes', 'Mi Banco', 'bank', '', '', '', '', '', '', '-250000.0', '2025-01-05', 'Compras', '', '', '', '', '', '', '', ''].join(','),
+    // Ingreso
+    ['Nómina', 'Sueldo mensual', 'Mi Banco', 'bank', '', '1', '', '', '', '', '3500000.0', '2025-01-30', 'Nómina', '', '', '', '', '', '', '', ''].join(','),
+    // Transferencia (pago de tarjeta / entre cuentas)
+    ['Pago Tarjeta', 'Pago de la tarjeta', 'Mi Banco', 'bank', '', '', '', '', 'Mi Tarjeta', 'credit_card', '-500000.0', '2025-02-05', 'Financiero', '', '', '', '', '', '', '', ''].join(','),
+    // Préstamo a persona (primera fila = principal, siguientes = abonos)
+    ['Préstamo a Carlos', 'Le presté para la moto', 'Mi Banco', 'bank', '', '', '', '', '', '', '1500000.0', '2025-02-10', 'Préstamos', 'Préstamo Carlos', 'lent', 'person', 'Carlos Gómez', '3001234567', 'carlos@gmail.com', 'CC 1001234567', 'Vecino'].join(','),
+    ['Abono de Carlos', 'Abono parcial', 'Mi Banco', 'bank', '', '', '', '', '', '', '-500000.0', '2025-03-01', 'Préstamos', 'Préstamo Carlos', 'lent', 'person', 'Carlos Gómez', '3001234567', 'carlos@gmail.com', 'CC 1001234567', 'Vecino'].join(','),
+    // Crédito (borrowed) a entidad
+    ['Crédito Vehículo', 'Principal del crédito', 'Mi Banco', 'bank', '', '', '', '', '', '', '8000000.0', '2025-01-10', 'Financiero', 'Crédito Vehículo', 'borrowed', 'entity', '', '', '', '', ''].join(','),
+    // CDT con vencimiento y rendimiento
+    ['Inversión CDT', 'CDT a 6 meses', 'Mi Banco', 'bank', '', '', '2025-07-09', '50000.00', 'Mi CDT', 'cdt', '-1000000.0', '2025-01-09', 'Financiero', '', '', '', '', '', '', '', ''].join(','),
+  ];
+  return [headers, ...rows].join('\n');
+}
+
+/** BOM UTF-8 para que Excel/Numbers muestren bien los acentos y la ñ. */
+export const CSV_BOM = '\uFEFF';
 
 export function importCsv(text: string, mode: ImportMode = 'merge'): CsvImportResult {
   const rows = parseCsv(text);

@@ -244,7 +244,8 @@ export function exportTransactionsCsv(): string {
       r.type,
     ].join(',');
   });
-  return [header, ...lines].join('\n');
+  // BOM UTF-8 para que Excel/Numbers muestren bien los acentos y la ñ.
+  return '\uFEFF' + [header, ...lines].join('\n');
 }
 
 export function getTransaction(id: number): Transaction | null {

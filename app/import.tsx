@@ -4,8 +4,8 @@ import { router } from 'expo-router';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
 import { ModalScreen, Card, Button, formatMoney } from '@/src/components/ui';
-import { previewCsv, importCsv, CsvPreview } from '@/src/services/csvImportService';
-import { pickCsvText } from '@/src/services/fileService';
+import { previewCsv, importCsv, generateTemplateCsv, CsvPreview } from '@/src/services/csvImportService';
+import { pickCsvText, shareText } from '@/src/services/fileService';
 
 export default function ImportScreen() {
   const { refresh } = useApp();
@@ -32,6 +32,16 @@ export default function ImportScreen() {
       Alert.alert('Error', String(e));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      const csv = generateTemplateCsv();
+      const shared = await shareText('plantilla-cajita.csv', csv);
+      if (!shared) Alert.alert('Plantilla copiada', 'El CSV de plantilla se copió al portapapeles.');
+    } catch (e) {
+      Alert.alert('Error', String(e));
     }
   };
 
@@ -102,6 +112,7 @@ export default function ImportScreen() {
       }
     >
       <Button title="Elegir archivo CSV" icon="folder-open" variant="secondary" loading={busy} onPress={pick} />
+      <Button title="Descargar plantilla" icon="document-text" variant="ghost" onPress={downloadTemplate} style={{ marginTop: 8 }} />
 
       <Card style={{ marginTop: 12, gap: 6 }}>
         <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>Resumen</Text>
