@@ -24,8 +24,15 @@ export default function SubscriptionEditor() {
   const isNew = !params.id || params.id === 'new';
   const existing = isNew ? null : getRecurringById(parseInt(params.id, 10));
 
-  const { accounts, categories, people, refresh } = useApp();
+  const { accounts, categories, people, refresh, isPremium } = useApp();
   const { colors, prefs } = useTheme();
+
+  React.useEffect(() => {
+    if (!isPremium) {
+      Alert.alert('Función Premium', 'Las suscripciones y los gastos fijos están disponibles con Cajita Premium.');
+      router.back();
+    }
+  }, [isPremium]);
 
   const initialKind: RecurringKind =
     existing?.kind ?? (RECURRING_KINDS.some((k) => k.key === params.kind) ? (params.kind as RecurringKind) : 'subscription');

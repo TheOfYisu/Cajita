@@ -24,6 +24,7 @@ import {
   Person,
 } from '@/src/db/database';
 import { getPrefs } from '@/src/services/prefsService';
+import { initPremium, restorePremium } from '@/src/services/premiumService';
 import { safeIcon } from '@/src/theme';
 
 interface AppState {
@@ -49,6 +50,7 @@ interface AppState {
   };
   fixed: FixedMonthlySummary;
   cash: { active: WithdrawalView[]; totalRemaining: number; lastMonthLeftover: number };
+  isPremium: boolean;
   refresh: () => void;
 }
 
@@ -186,6 +188,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       summary: { debtEntities, debtPeople, owedToMe, subscriptionsMonthly, fixedMonthly: fixed.total, debtPaidThisMonth },
       fixed,
       cash,
+      isPremium: getPrefs().premium,
       refresh,
     };
   }, [tick, refresh]);
@@ -234,4 +237,7 @@ export function bootstrap(): void {
   }
   // Reprograma las notificaciones locales de suscripciones (async, sin bloquear el arranque).
   void syncSubscriptionNotifications();
+  // Conecta los listeners de compra de Premium y restaura compras previas.
+  initPremium();
+  void restorePremium();
 }

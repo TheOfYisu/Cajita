@@ -19,8 +19,10 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../theme/ThemeProvider';
+import { useApp } from '../store/appStore';
 import { IconName, SWATCHES, safeIcon } from '../theme';
 
 export function formatMoney(v: number, currency = 'COP', hide = false): string {
@@ -794,4 +796,47 @@ export function Money({
   const { colors } = useTheme();
   const color = colored ? (value < 0 ? colors.negative : colors.positive) : colors.text;
   return <Text style={[{ color, fontWeight: '700' }, style]}>{formatMoney(value, currency, hide)}</Text>;
+}
+
+/**
+ * Envuelve contenido Premium. Si el usuario no es Premium, muestra el contenido
+ * desenfocado (BlurView) + un bloque bloqueado con botón para ir a la pantalla de compra.
+ */
+export function PremiumGate({
+  feature,
+  children,
+}: {
+  feature: string;
+  children: React.ReactNode;
+}) {
+  const { colors } = useTheme();
+  const { isPremium } = useApp();
+  if (isPremium) return <>{children}</>;
+  return (
+    <View style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
+      <View style={{ pointerEvents: 'none' as never }}>
+        <View style={{ opacity: 0.85 }}>{children}</View>
+        <BlurView intensity={32} tint="systemUltraThinMaterial" style={StyleSheet.absoluteFill} />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg + '99' }]} />
+      </View>
+      <View style={{ alignItems: 'center', padding: 20, gap: 6, backgroundColor: colors.surfaceAlt }}>
+        <Ionicons name="lock-closed" size={22} color={colors.accent} />
+        <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }}>Función Premium</Text>
+        <Text style={{ color: colors.textMuted, fontSize: 12, textAlign: 'center', maxWidth: 260 }}>
+          {feature} está disponible con Cajita Premium.
+        </Text>
+        <Pressable
+          onPress={() => router.push('/premium' as never)}
+          style={({ pressed }) => [
+            {
+              marginTop: 8, backgroundColor: colors.accent, paddingVertical: 10, paddingHorizontal: 22, borderRadius: 999,
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <Text style={{ color: colors.onAccent, fontWeight: '700', fontSize: 14 }}>Ver Premium</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
 }

@@ -39,6 +39,7 @@ function Navigator() {
         <Stack.Screen name="cash/[id]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="insight/[metric]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="import" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="premium" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings/profile" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings/appearance" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings/notifications" options={{ presentation: 'modal' }} />

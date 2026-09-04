@@ -10,13 +10,22 @@ import { createPerson } from '@/src/services/personService';
 
 export default function NewLoanScreen() {
   const params = useLocalSearchParams<{ type?: string; kind?: string }>();
-  const { refresh, people } = useApp();
+  const { refresh, people, isPremium } = useApp();
   const { colors } = useTheme();
 
   const [type, setType] = React.useState<'borrowed' | 'lent'>(params.type === 'lent' ? 'lent' : 'borrowed');
   const [kind, setKind] = React.useState<'entity' | 'person'>(
     params.kind === 'entity' ? 'entity' : params.kind === 'person' ? 'person' : type === 'lent' ? 'person' : 'entity',
   );
+
+  // Los préstamos y personas son Premium: si no hay Premium, bloquea el acceso.
+  React.useEffect(() => {
+    if (!isPremium) {
+      Alert.alert('Función Premium', 'Los préstamos y las personas están disponibles con Cajita Premium.');
+      router.back();
+    }
+  }, [isPremium]);
+
   const [entityName, setEntityName] = React.useState('');
   const [personId, setPersonId] = React.useState<number | null>(null);
   const [newPersonName, setNewPersonName] = React.useState('');

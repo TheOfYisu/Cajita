@@ -7,7 +7,14 @@ import { ModalScreen, Card, Field, Button } from '@/src/components/ui';
 import { createPerson } from '@/src/services/personService';
 
 export default function NewPersonScreen() {
-  const { refresh } = useApp();
+  const { refresh, isPremium } = useApp();
+
+  React.useEffect(() => {
+    if (!isPremium) {
+      Alert.alert('Función Premium', 'Las personas están disponibles con Cajita Premium.');
+      router.back();
+    }
+  }, [isPremium]);
   const [name, setName] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [email, setEmail] = React.useState('');

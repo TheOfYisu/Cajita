@@ -5,7 +5,7 @@ import { Link, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
-import { formatMoney, ProgressBar } from '@/src/components/ui';
+import { formatMoney, ProgressBar, PremiumGate } from '@/src/components/ui';
 import { safeIcon } from '@/src/theme';
 import { Transaction } from '@/src/db/database';
 import { getSubscriptions, daysUntil, frequencyLabel } from '@/src/services/recurringService';
@@ -77,41 +77,43 @@ export default function HomeScreen() {
 
         {/* GASTOS FIJOS DEL MES */}
         {fixed.items.length > 0 && (
-          <View style={[styles.block, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Pressable style={styles.blockHead} onPress={() => router.push('/settings/recurring')}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.blockTitle, { color: colors.text }]}>Gastos fijos · <Text style={{ textTransform: 'capitalize' }}>{monthName()}</Text></Text>
-                <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}>
-                  {fixedDone} de {fixed.items.length} listos
-                  {fixed.pendingTotal > 0 ? ` · faltan ${formatMoney(fixed.pendingTotal, prefs.currency, hide)}` : ''}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </Pressable>
-            <View style={{ marginTop: 10, marginBottom: fixedPending.length ? 12 : 0 }}>
-              <ProgressBar pct={fixed.items.length ? fixedDone / fixed.items.length : 0} color={colors.positive} />
-            </View>
-            {fixedPending.slice(0, 3).map((it) => (
-              <View key={it.payment.id} style={[styles.fixedRow, { borderColor: colors.border }]}>
+          <PremiumGate feature="Los gastos fijos y suscripciones">
+            <View style={[styles.block, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Pressable style={styles.blockHead} onPress={() => router.push('/settings/recurring')}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: colors.text, fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{it.recurring.title}</Text>
-                  <Text style={{ color: it.status === 'overdue' ? colors.negative : colors.textMuted, fontSize: 11, marginTop: 1 }}>
-                    {it.status === 'overdue' ? 'Vencido' : 'Vence'} {new Date(it.payment.dueDate).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
-                    {' · '}{it.recurring.variableAmount ? '~' : ''}{formatMoney(Math.abs(it.recurring.amount), prefs.currency, hide)}
+                  <Text style={[styles.blockTitle, { color: colors.text }]}>Gastos fijos · <Text style={{ textTransform: 'capitalize' }}>{monthName()}</Text></Text>
+                  <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}>
+                    {fixedDone} de {fixed.items.length} listos
+                    {fixed.pendingTotal > 0 ? ` · faltan ${formatMoney(fixed.pendingTotal, prefs.currency, hide)}` : ''}
                   </Text>
                 </View>
-                <Pressable
-                  onPress={() => router.push(`/fixed/pay/${it.payment.id}` as never)}
-                  style={({ pressed }) => [styles.payBtn, { backgroundColor: colors.accent }, pressed && { opacity: 0.8 }]}
-                >
-                  <Text style={{ color: colors.onAccent, fontWeight: '700', fontSize: 12 }}>Pagar</Text>
-                </Pressable>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </Pressable>
+              <View style={{ marginTop: 10, marginBottom: fixedPending.length ? 12 : 0 }}>
+                <ProgressBar pct={fixed.items.length ? fixedDone / fixed.items.length : 0} color={colors.positive} />
               </View>
-            ))}
-            {fixedPending.length === 0 ? (
-              <Text style={{ color: colors.positive, fontSize: 12, fontWeight: '600', marginTop: 8 }}>Todo pagado este mes ✓</Text>
-            ) : null}
-          </View>
+              {fixedPending.slice(0, 3).map((it) => (
+                <View key={it.payment.id} style={[styles.fixedRow, { borderColor: colors.border }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{it.recurring.title}</Text>
+                    <Text style={{ color: it.status === 'overdue' ? colors.negative : colors.textMuted, fontSize: 11, marginTop: 1 }}>
+                      {it.status === 'overdue' ? 'Vencido' : 'Vence'} {new Date(it.payment.dueDate).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                      {' · '}{it.recurring.variableAmount ? '~' : ''}{formatMoney(Math.abs(it.recurring.amount), prefs.currency, hide)}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => router.push(`/fixed/pay/${it.payment.id}` as never)}
+                    style={({ pressed }) => [styles.payBtn, { backgroundColor: colors.accent }, pressed && { opacity: 0.8 }]}
+                  >
+                    <Text style={{ color: colors.onAccent, fontWeight: '700', fontSize: 12 }}>Pagar</Text>
+                  </Pressable>
+                </View>
+              ))}
+              {fixedPending.length === 0 ? (
+                <Text style={{ color: colors.positive, fontSize: 12, fontWeight: '600', marginTop: 8 }}>Todo pagado este mes ✓</Text>
+              ) : null}
+            </View>
+          </PremiumGate>
         )}
 
         {/* EFECTIVO EN MANO */}

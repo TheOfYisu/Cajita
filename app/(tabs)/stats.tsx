@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
-import { Screen, Card, SectionTitle, EmptyState, ProgressBar, Chip, formatMoney } from '@/src/components/ui';
+import { Screen, Card, SectionTitle, EmptyState, ProgressBar, Chip, formatMoney, PremiumGate } from '@/src/components/ui';
 import { MonthlyBars, CategoryBreakdown } from '@/src/components/Charts';
 import { spendingByCategory, monthRange } from '@/src/db/database';
 import { getBudgetProgress } from '@/src/services/budgetService';
@@ -64,10 +64,11 @@ export default function StatsScreen() {
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
-        <Chip label="Resumen" active={view === 'summary'} onPress={() => setView('summary')} />
-        <Chip label="Mes a mes" active={view === 'monthly'} onPress={() => setView('monthly')} />
-      </View>
+      <PremiumGate feature="Las estadísticas avanzadas">
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+          <Chip label="Resumen" active={view === 'summary'} onPress={() => setView('summary')} />
+          <Chip label="Mes a mes" active={view === 'monthly'} onPress={() => setView('monthly')} />
+        </View>
 
       {view === 'summary' ? (
         <>
@@ -172,6 +173,7 @@ export default function StatsScreen() {
           </View>
         )}
       </Card>
+      </PremiumGate>
     </Screen>
   );
 }

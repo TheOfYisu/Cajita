@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/src/store/appStore';
@@ -9,9 +9,16 @@ import { loanBalance } from '@/src/services/loanService';
 import { Loan } from '@/src/db/database';
 
 export default function PeopleScreen() {
-  const { loans } = useApp();
+  const { loans, isPremium } = useApp();
   const { colors, prefs } = useTheme();
   const hide = prefs.hideBalances;
+
+  React.useEffect(() => {
+    if (!isPremium) {
+      Alert.alert('Función Premium', 'Las personas y los préstamos están disponibles con Cajita Premium.');
+      router.back();
+    }
+  }, [isPremium]);
 
   const lent = loans.filter((l) => l.type === 'lent' && l.personId != null);
   const borrowed = loans.filter((l) => l.type === 'borrowed' && l.personId != null);

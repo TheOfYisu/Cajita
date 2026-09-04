@@ -4,6 +4,7 @@ import { File, Paths } from 'expo-file-system';
 import { requireNativeModule } from 'expo-modules-core';
 import { getDb, setOnDbWrite, closeDbForRestore } from '../db/database';
 import type { SQLiteDatabase } from 'expo-sqlite';
+import { isPremium } from './premiumService';
 
 /**
  * Copia de seguridad automática en iCloud.
@@ -56,10 +57,14 @@ function dbFile(): File {
 /**
  * Conecta el hook de escrituras de la BD con el backup y flushea al pasar la app
  * a segundo plano. Llamar una vez al arranque, tras `setDbKey`.
+ *
+ * El backup AUTOMÁTICO es una función Premium: solo se conecta si el usuario es
+ * Premium. La subida manual (botón en Ajustes → Copia de seguridad) queda gratis.
  */
 export function initCloudBackup(): void {
   if (initialized) return;
   initialized = true;
+  if (!isPremium()) return;
   setOnDbWrite(() => scheduleCloudBackup(getDb()));
   AppState.addEventListener('change', (state) => {
     if (state !== 'active' && debounceTimer) {

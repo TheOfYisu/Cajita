@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
 import { AccountCard } from '@/src/components/AccountCard';
-import { Screen, Card, Button, EmptyState, formatMoney } from '@/src/components/ui';
+import { Screen, Card, Button, EmptyState, formatMoney, PremiumGate } from '@/src/components/ui';
 import { loanBalance } from '@/src/services/loanService';
 
 export default function CarteraScreen() {
@@ -118,26 +118,30 @@ export default function CarteraScreen() {
 
       {/* DEUDAS A PERSONAS */}
       <View style={{ marginBottom: 10 }}>
-        <SectionHeader title="Deudas · personas" amount={formatMoney(personDebtTotal, prefs.currency, hide)} amountColor={colors.negative} colors={colors} />
-        {borrowedPerson.map((l) => (
-          <LoanRow key={`lp-${l.id}`} loanId={l.id} name={people.find((p) => p.id === l.personId)?.name ?? l.name} sub={l.notes || undefined} negative colors={colors} prefs={prefs} hide={hide} />
-        ))}
-        {borrowedPerson.length === 0 ? (
-          <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 8 }}>No le debes a ninguna persona.</Text>
-        ) : null}
-        <Button title="Registrar deuda con persona" icon="add" variant="secondary" onPress={() => router.push('/loan/new?type=borrowed&kind=person')} />
+        <PremiumGate feature="Los préstamos y las personas">
+          <SectionHeader title="Deudas · personas" amount={formatMoney(personDebtTotal, prefs.currency, hide)} amountColor={colors.negative} colors={colors} />
+          {borrowedPerson.map((l) => (
+            <LoanRow key={`lp-${l.id}`} loanId={l.id} name={people.find((p) => p.id === l.personId)?.name ?? l.name} sub={l.notes || undefined} negative colors={colors} prefs={prefs} hide={hide} />
+          ))}
+          {borrowedPerson.length === 0 ? (
+            <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 8 }}>No le debes a ninguna persona.</Text>
+          ) : null}
+          <Button title="Registrar deuda con persona" icon="add" variant="secondary" onPress={() => router.push('/loan/new?type=borrowed&kind=person')} />
+        </PremiumGate>
       </View>
 
       {/* ME DEBEN */}
       <View style={{ marginBottom: 10 }}>
-        <SectionHeader title="Me deben" amount={formatMoney(lentTotal, prefs.currency, hide)} amountColor={colors.positive} colors={colors} />
-        {lentLoans.map((l) => (
-          <LoanRow key={`lent-${l.id}`} loanId={l.id} name={people.find((p) => p.id === l.personId)?.name ?? l.name} sub={l.notes || undefined} colors={colors} prefs={prefs} hide={hide} />
-        ))}
-        {lentLoans.length === 0 ? (
-          <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 8 }}>Nadie te debe por ahora.</Text>
-        ) : null}
-        <Button title="Registrar préstamo a alguien" icon="add" variant="secondary" onPress={() => router.push('/loan/new?type=lent&kind=person')} />
+        <PremiumGate feature="Los préstamos y las personas">
+          <SectionHeader title="Me deben" amount={formatMoney(lentTotal, prefs.currency, hide)} amountColor={colors.positive} colors={colors} />
+          {lentLoans.map((l) => (
+            <LoanRow key={`lent-${l.id}`} loanId={l.id} name={people.find((p) => p.id === l.personId)?.name ?? l.name} sub={l.notes || undefined} colors={colors} prefs={prefs} hide={hide} />
+          ))}
+          {lentLoans.length === 0 ? (
+            <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 8 }}>Nadie te debe por ahora.</Text>
+          ) : null}
+          <Button title="Registrar préstamo a alguien" icon="add" variant="secondary" onPress={() => router.push('/loan/new?type=lent&kind=person')} />
+        </PremiumGate>
       </View>
 
       {/* PERSONAS */}

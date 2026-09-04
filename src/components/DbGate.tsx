@@ -29,11 +29,17 @@ export function DbGate({ children }: { children: React.ReactNode }) {
         } catch {
           /* restaurar no debe bloquear el arranque */
         }
-        initCloudBackup();
         try {
           bootstrap();
         } catch {
           /* bootstrap no debe bloquear el arranque */
+        }
+        // Conecta el backup automático (solo si es Premium). Va DESPUÉS de bootstrap()
+        // para que restorePremium() ya haya cargado el estado de compra.
+        try {
+          initCloudBackup();
+        } catch {
+          /* noop */
         }
         // Backup inicial: sube el estado actual la primera vez que se abre la app.
         try {

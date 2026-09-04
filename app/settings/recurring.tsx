@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/src/store/appStore';
@@ -18,7 +18,14 @@ const STATUS_META: Record<FixedStatus, { label: string; icon: string; key: 'posi
 };
 
 export default function RecurringScreen() {
-  const { categories, people } = useApp();
+  const { categories, people, isPremium } = useApp();
+
+  React.useEffect(() => {
+    if (!isPremium) {
+      Alert.alert('Función Premium', 'Las suscripciones y los gastos fijos están disponibles con Cajita Premium.');
+      router.back();
+    }
+  }, [isPremium]);
   const { colors, prefs } = useTheme();
   const [tab, setTab] = React.useState<'subs' | 'fixed'>('subs');
 

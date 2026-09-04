@@ -11,6 +11,7 @@ export interface Prefs {
   notificationsEnabled: boolean;
   defaultLeadDays: number;
   appLockEnabled: boolean;
+  premium: boolean;
 }
 
 const DEFAULTS: Prefs = {
@@ -24,6 +25,7 @@ const DEFAULTS: Prefs = {
   notificationsEnabled: true,
   defaultLeadDays: 3,
   appLockEnabled: false,
+  premium: false,
 };
 
 const PREFIX = 'pref:';

@@ -7,6 +7,7 @@ import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
 import { Screen, Card, Divider } from '@/src/components/ui';
 import { IconName, ACCENT_COLORS } from '@/src/theme';
+import { isPremium } from '@/src/services/premiumService';
 import { getPendingCounts, exportBackup } from '@/src/services/syncService';
 import { exportTransactionsCsv } from '@/src/services/transactionService';
 import { shareText } from '@/src/services/fileService';
@@ -102,6 +103,12 @@ export default function SettingsScreen() {
     items: { icon: IconName; label: string; hint?: string; onPress: () => void; color?: string }[];
   }[] = [
     {
+      title: 'Cajita Premium',
+      items: [
+        { icon: 'diamond', label: isPremium() ? 'Premium activo' : 'Desbloquear Premium', hint: isPremium() ? 'Funciones avanzadas desbloqueadas' : 'Pago único · de por vida', onPress: () => router.push('/premium' as never), color: colors.accent },
+      ],
+    },
+    {
       title: 'Personalización',
       items: [
         { icon: 'person-circle', label: 'Perfil', hint: prefs.userName || 'Sin nombre', onPress: () => router.push('/settings/profile') },
@@ -153,7 +160,9 @@ export default function SettingsScreen() {
               {totalPending > 0 ? ` · ${totalPending} cambios pendientes` : ''}
             </Text>
             <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}>
-              Automática en cada cambio · toca para subir ahora
+              {isPremium()
+                ? 'Automática en cada cambio · toca para subir ahora'
+                : 'Subida manual disponible · automática con Premium'}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
