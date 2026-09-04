@@ -7,12 +7,11 @@ workflows:
     integrations:
       app_store_connect: CodemagicAppStore
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.cajita.app
       node: 22
       xcode: latest
       cocoapods: default
+      groups:
+        - code-signing
       vars:
         XCODE_WORKSPACE: "ios/Cajita.xcworkspace"
         XCODE_SCHEME: "Cajita"
@@ -30,6 +29,15 @@ workflows:
         script: npx expo prebuild --platform ios --clean --no-install
       - name: Instalar pods
         script: cd ios && pod install
+      - name: Inicializar keychain
+        script: keychain initialize
+      - name: Obtener/crear certificado y provisioning profile (App Store)
+        script: |
+          app-store-connect fetch-signing-files "com.cajita.app" \
+            --type IOS_APP_STORE \
+            --create
+      - name: Añadir certificado al keychain
+        script: keychain add-certificates
       - name: Aplicar perfiles de aprovisionamiento
         script: xcode-project use-profiles
       - name: Build number desde App Store Connect
