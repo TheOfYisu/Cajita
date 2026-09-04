@@ -17,6 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.cajita.app",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSUbiquitousContainers": {
           "iCloud.com.cajita.app": {
             "NSUbiquitousContainerIsDocumentScopePublic": true,
@@ -42,12 +43,24 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sqlite",
+      "./plugins/withCajitaEntitlements",
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
       "expo-router",
       [
         "expo-secure-store",
         {
           "faceIDPermission": "Permitir acceso con Face ID para proteger tus datos financieros"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Cajita usa Face ID para desbloquear la app y proteger tus finanzas"
         }
       ],
       [

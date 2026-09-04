@@ -10,6 +10,7 @@ export interface Prefs {
   onboarded: boolean;
   notificationsEnabled: boolean;
   defaultLeadDays: number;
+  appLockEnabled: boolean;
 }
 
 const DEFAULTS: Prefs = {
@@ -22,6 +23,7 @@ const DEFAULTS: Prefs = {
   onboarded: false,
   notificationsEnabled: true,
   defaultLeadDays: 3,
+  appLockEnabled: false,
 };
 
 const PREFIX = 'pref:';

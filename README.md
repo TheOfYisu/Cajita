@@ -39,16 +39,31 @@ Cajita es una app de gestión financiera construida con **React Native / Expo SD
 - **«Balance inicial»** en el título se importa como Balance Correction
 - Archivo de ejemplo listo para importar: **`import_cajita.csv`** (560 movimientos reales)
 
-### Sincronización iCloud
+### Copia de seguridad iCloud (iOS)
 - **Local-first**: la base SQLite local es la fuente de verdad, funciona 100% offline
-- Cada registro tiene estado de sync (`pending` / `synced` / `deleted`)
-- Backups en **tu iCloud** (CloudKit) — el desarrollador no tiene acceso a tus datos
-- Exportación de backup en JSON
+- **Backup automático**: cada cambio que guardas sube `cajita.db` (cifrada) al contenedor
+  de iCloud de tu cuenta — sin servidores propios, nadie más accede a tus datos
+- Al abrir la app en un **iPhone nuevo** (o tras reinstalar) se restaura la copia sola si
+  la BD local está vacía; también hay restauración manual en Ajustes
+- Exportación de backup en JSON (portable, iOS y Android)
 
 ### Seguridad
-- Bloqueo con **Face ID / Touch ID** (expo-secure-store)
+- **Base de datos local cifrada con SQLCipher (AES-256)** — la clave vive en el llavero seguro del dispositivo (Keychain iOS / Keystore Android). El archivo `.db` es ilegible fuera de la app, incluso con el teléfono desbloqueado o en un backup
+- La clave SQLCipher viaja por **iCloud Keychain** (misma Apple ID), así el backup cifrado
+  se descifra en el iPhone nuevo. Requiere **iCloud Keychain activado**
+- Bloqueo de la app con **Face ID / Touch ID / huella** (expo-local-authentication), con PIN/patrón del sistema como respaldo. Se re-bloquea al volver de segundo plano; se activa en **Ajustes → Seguridad**
 - **Sin servidores**: no se conecta a bancos ni sube datos a terceros
 - **Sin analytics ni trackers**
+- ⚠️ El backup JSON exportable **no** está cifrado
+
+### Gastos fijos y servicios mensuales
+- Parametriza arriendo, administración, agua, luz, gas, internet, celular… con monto estimado y día de pago
+- Cada mes aparecen como **pendiente** hasta que los marcas como pagados (ingresando el monto real)
+- Recordatorio antes del vencimiento; checklist del mes en Inicio
+
+### Retiros de efectivo
+- Registra «retiré $X» (banco → efectivo) y la app descuenta automáticamente los gastos en efectivo
+- Ves «de $X retirados quedan $Y» y cuánto sobró al cerrar el mes
 
 ---
 
@@ -59,9 +74,10 @@ Cajita es una app de gestión financiera construida con **React Native / Expo SD
 | **Expo** | SDK 54 (compatible con Expo Go) |
 | **React Native** | 0.81.5 |
 | **Navegación** | expo-router |
-| **Base de datos** | expo-sqlite (SQLite local) |
+| **Base de datos** | expo-sqlite + **SQLCipher** (SQLite local cifrado AES-256) |
 | **Sincronización** | CloudKit / iCloud (NSUbiquitousContainers) |
-| **Seguridad** | expo-secure-store |
+| **Seguridad** | expo-local-authentication (Face ID / Touch ID / huella) |
+| **CI/CD** | Codemagic (`codemagic.yaml`) — build iOS/Android con `expo prebuild` |
 | **Lenguaje** | TypeScript (estricto) |
 
 ---
@@ -69,29 +85,48 @@ Cajita es una app de gestión financiera construida con **React Native / Expo SD
 ## 🚀 Cómo ejecutar
 
 ```bash
-cd E:\Nueva carpeta\cajita
 npm install
-npx expo start
 ```
 
-- Escanea el QR con **Expo Go** (SDK 54) en tu iPhone
-- O presiona `i` para abrir en simulador iOS
-- `npx expo start --web` para probar en navegador
+> ⚠️ **Expo Go ya no es compatible.** La app usa SQLCipher (módulo nativo), así que
+> necesita un **dev build**.
 
-> Nota: la sincronización con **iCloud requiere build nativa** (EAS Build), no funciona en Expo Go.
+- **Android (Windows):** `npx expo run:android` con un emulador o dispositivo conectado.
+- **iOS:** genera un dev build en Codemagic/EAS (`ios_signing.distribution_type: development`),
+  instálalo en el dispositivo y luego `npx expo start --dev-client`.
+- **Web (solo pruebas de UI):** `npx expo start --web` — en web no hay cifrado ni módulos nativos.
 
 ---
 
-## 📦 Build para iOS (desde Windows)
+## 📦 Build para iOS / Android (desde Windows)
 
-Como el desarrollo es en Windows y la app es para iOS, se usa **EAS Build** (compila en la nube, sin Mac):
+El desarrollo es en Windows, así que la compilación nativa corre en la nube.
+
+### Codemagic (recomendado) — `codemagic.yaml`
+
+El repo trae `codemagic.yaml` con dos workflows (`ios-release`, `android-release`) que
+generan los proyectos nativos en CI con `npx expo prebuild` (por eso `ios/` y `android/`
+están en `.gitignore`). Se disparan al crear un tag `v*`:
+
+```bash
+git tag v1.0.1 && git push origin v1.0.1
+```
+
+Antes del primer build hay que configurar en el panel de Codemagic la integración de
+**App Store Connect** (firma automática) y rellenar `APP_STORE_APPLE_ID`. Para Android,
+subir el keystore y descomentar el bloque `android_signing`. Ver comentarios en el YAML.
+La configuración de iCloud ya está en `app.json` (`NSUbiquitousContainers` +
+entitlements vía `plugins/withCajitaEntitlements.js`), pero el App ID `com.cajita.app`
+debe tener la capacidad **iCloud** habilitada en Apple Developer con el contenedor
+`iCloud.com.cajita.app`, y el usuario necesita **iCloud Keychain activado** para que la
+clave SQLCipher llegue a un iPhone nuevo.
+
+### EAS Build (alternativa)
 
 ```bash
 npx eas-cli login
 npx eas-cli build --platform ios
 ```
-
-Esto genera el `.ipa` que puedes publicar en TestFlight / App Store. La configuración de iCloud (CloudKit) ya está en `app.json` (`NSUbiquitousContainers`).
 
 ---
 

@@ -5,10 +5,10 @@ import { Link, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
-import { formatMoney } from '@/src/components/ui';
+import { formatMoney, ProgressBar } from '@/src/components/ui';
 import { safeIcon } from '@/src/theme';
 import { Transaction } from '@/src/db/database';
-import { getRecurring, daysUntil, frequencyLabel } from '@/src/services/recurringService';
+import { getSubscriptions, daysUntil, frequencyLabel } from '@/src/services/recurringService';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -17,14 +17,21 @@ function greeting(): string {
   return 'Buenas noches';
 }
 
+function monthName(): string {
+  return new Date().toLocaleDateString('es-CO', { month: 'long' });
+}
+
 export default function HomeScreen() {
-  const { accounts, transactions, netWorth, totalAssets, totalDebt, month, summary } = useApp();
+  const { accounts, transactions, netWorth, totalAssets, totalDebt, month, summary, fixed, cash } = useApp();
   const { colors, prefs, updatePrefs } = useTheme();
   const hide = prefs.hideBalances;
-  const upcoming = getRecurring()
+  const upcoming = getSubscriptions()
     .filter((r) => r.type === 'expense' && daysUntil(r.nextRun) <= 14)
     .sort((a, b) => a.nextRun - b.nextRun)
     .slice(0, 4);
+
+  const fixedPending = fixed.items.filter((it) => it.status === 'pending' || it.status === 'overdue');
+  const fixedDone = fixed.items.filter((it) => it.status === 'paid' || it.status === 'skipped').length;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
@@ -65,18 +72,99 @@ export default function HomeScreen() {
           <Quick icon="arrow-down" label="Gasto" color={colors.negative} onPress={() => router.push('/transaction/new?mode=expense')} />
           <Quick icon="arrow-up" label="Ingreso" color={colors.positive} onPress={() => router.push('/transaction/new?mode=income')} />
           <Quick icon="swap-horizontal" label="Transferir" color={colors.transfer} onPress={() => router.push('/transfer/new')} />
-          <Quick icon="card" label="Pagar deuda" color={colors.accent} onPress={() => router.push('/transaction/new?mode=paycard')} />
+          <Quick icon="cash" label="Retirar" color={colors.warning} onPress={() => router.push('/cash/new' as never)} />
         </View>
 
+        {/* GASTOS FIJOS DEL MES */}
+        {fixed.items.length > 0 && (
+          <View style={[styles.block, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Pressable style={styles.blockHead} onPress={() => router.push('/settings/recurring')}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.blockTitle, { color: colors.text }]}>Gastos fijos · <Text style={{ textTransform: 'capitalize' }}>{monthName()}</Text></Text>
+                <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}>
+                  {fixedDone} de {fixed.items.length} listos
+                  {fixed.pendingTotal > 0 ? ` · faltan ${formatMoney(fixed.pendingTotal, prefs.currency, hide)}` : ''}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </Pressable>
+            <View style={{ marginTop: 10, marginBottom: fixedPending.length ? 12 : 0 }}>
+              <ProgressBar pct={fixed.items.length ? fixedDone / fixed.items.length : 0} color={colors.positive} />
+            </View>
+            {fixedPending.slice(0, 3).map((it) => (
+              <View key={it.payment.id} style={[styles.fixedRow, { borderColor: colors.border }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{it.recurring.title}</Text>
+                  <Text style={{ color: it.status === 'overdue' ? colors.negative : colors.textMuted, fontSize: 11, marginTop: 1 }}>
+                    {it.status === 'overdue' ? 'Vencido' : 'Vence'} {new Date(it.payment.dueDate).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                    {' · '}{it.recurring.variableAmount ? '~' : ''}{formatMoney(Math.abs(it.recurring.amount), prefs.currency, hide)}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => router.push(`/fixed/pay/${it.payment.id}` as never)}
+                  style={({ pressed }) => [styles.payBtn, { backgroundColor: colors.accent }, pressed && { opacity: 0.8 }]}
+                >
+                  <Text style={{ color: colors.onAccent, fontWeight: '700', fontSize: 12 }}>Pagar</Text>
+                </Pressable>
+              </View>
+            ))}
+            {fixedPending.length === 0 ? (
+              <Text style={{ color: colors.positive, fontSize: 12, fontWeight: '600', marginTop: 8 }}>Todo pagado este mes ✓</Text>
+            ) : null}
+          </View>
+        )}
+
+        {/* EFECTIVO EN MANO */}
+        {cash.active.length > 0 ? (
+          <View style={[styles.block, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Pressable style={styles.blockHead} onPress={() => router.push('/cash' as never)}>
+              <Text style={[styles.blockTitle, { color: colors.text }]}>Efectivo en mano</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </Pressable>
+            {cash.active.map((w) => {
+              const pct = w.amount > 0 ? w.spent / w.amount : 0;
+              return (
+                <Pressable key={w.id} onPress={() => router.push(`/cash/${w.id}` as never)} style={{ marginTop: 10 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                      {w.note || 'Retiro'} · retiraste {formatMoney(w.amount, prefs.currency, hide)}
+                    </Text>
+                    <Text style={{ color: w.remaining < 0 ? colors.negative : colors.text, fontWeight: '800', fontSize: 13 }}>
+                      quedan {formatMoney(w.remaining, prefs.currency, hide)}
+                    </Text>
+                  </View>
+                  <ProgressBar pct={pct} color={colors.warning} />
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : (
+          <Pressable
+            onPress={() => router.push('/cash/new' as never)}
+            style={[styles.cashCta, { borderColor: colors.border }]}
+          >
+            <Ionicons name="cash-outline" size={18} color={colors.warning} />
+            <Text style={{ color: colors.text, fontWeight: '600', flex: 1 }}>Registrar retiro en efectivo</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+          </Pressable>
+        )}
+
+        <Text style={[styles.groupLabel, { color: colors.textMuted }]}>ESTE MES</Text>
         <View style={styles.grid}>
-          <StatTile label="Ingresos del mes" value={formatMoney(month.income, prefs.currency, hide)} color={colors.positive} icon="arrow-up" colors={colors} onPress={() => router.push('/insight/income')} />
-          <StatTile label="Gastos del mes" value={formatMoney(month.expense, prefs.currency, hide)} color={colors.negative} icon="arrow-down" colors={colors} onPress={() => router.push('/insight/expense')} />
-          <StatTile label="Transferencias del mes" value={formatMoney(month.transfers, prefs.currency, hide)} color={colors.transfer} icon="swap-horizontal" colors={colors} onPress={() => router.push('/insight/transfers')} />
-          <StatTile label="Suscripciones (mensual)" value={formatMoney(summary.subscriptionsMonthly, prefs.currency, hide)} color={colors.warning} icon="repeat" colors={colors} onPress={() => router.push('/insight/subscriptions')} />
+          <StatTile label="Ingresos" value={formatMoney(month.income, prefs.currency, hide)} color={colors.positive} icon="arrow-up" colors={colors} onPress={() => router.push('/insight/income')} />
+          <StatTile label="Gastos" value={formatMoney(month.expense, prefs.currency, hide)} color={colors.negative} icon="arrow-down" colors={colors} onPress={() => router.push('/insight/expense')} />
+          <StatTile label="Gastos fijos" value={formatMoney(summary.fixedMonthly, prefs.currency, hide)} color={colors.warning} icon="home" colors={colors} onPress={() => router.push('/settings/recurring')} />
+          <StatTile label="Suscripciones" value={formatMoney(summary.subscriptionsMonthly, prefs.currency, hide)} color={colors.warning} icon="repeat" colors={colors} onPress={() => router.push('/insight/subscriptions')} />
+          <StatTile label="Transferencias" value={formatMoney(month.transfers, prefs.currency, hide)} color={colors.transfer} icon="swap-horizontal" colors={colors} onPress={() => router.push('/insight/transfers')} />
+          <StatTile label="Pagado a deudas" value={formatMoney(summary.debtPaidThisMonth, prefs.currency, hide)} color={colors.transfer} icon="trending-down" colors={colors} onPress={() => router.push('/insight/debt-paid')} />
+        </View>
+
+        <Text style={[styles.groupLabel, { color: colors.textMuted }]}>SALDOS</Text>
+        <View style={styles.grid}>
           <StatTile label="Debo a entidades" value={formatMoney(summary.debtEntities, prefs.currency, hide)} color={colors.negative} icon="business" colors={colors} onPress={() => router.push('/insight/debt-entities')} />
           <StatTile label="Debo a personas" value={formatMoney(summary.debtPeople, prefs.currency, hide)} color={colors.negative} icon="people" colors={colors} onPress={() => router.push('/insight/debt-people')} />
           <StatTile label="Me deben" value={formatMoney(summary.owedToMe, prefs.currency, hide)} color={colors.positive} icon="cash" colors={colors} onPress={() => router.push('/insight/owed')} />
-          <StatTile label="Pagado a deudas (mes)" value={formatMoney(summary.debtPaidThisMonth, prefs.currency, hide)} color={colors.transfer} icon="trending-down" colors={colors} onPress={() => router.push('/insight/debt-paid')} />
+          <StatTile label="Efectivo restante" value={formatMoney(cash.totalRemaining, prefs.currency, hide)} color={colors.warning} icon="wallet" colors={colors} onPress={() => router.push('/cash' as never)} />
         </View>
 
         {accounts.length === 0 ? (
@@ -216,6 +304,13 @@ const styles = StyleSheet.create({
   quick: { alignItems: 'center', gap: 6, flex: 1 },
   quickIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   quickLabel: { fontSize: 12, fontWeight: '600' },
+  block: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 16, marginBottom: 12 },
+  blockHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  blockTitle: { fontSize: 15, fontWeight: '800' },
+  fixedRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
+  payBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999 },
+  cashCta: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderStyle: 'dashed', borderRadius: 14, padding: 14, marginBottom: 12 },
+  groupLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginTop: 8, marginBottom: 8, marginLeft: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
   tile: { width: '48%', flexGrow: 1, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 12 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, marginBottom: 10 },

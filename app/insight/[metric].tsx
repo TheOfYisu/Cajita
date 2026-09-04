@@ -10,7 +10,7 @@ import { monthRange } from '@/src/db/database';
 import { pageTransactions } from '@/src/services/transactionService';
 import { debtPaymentTransactions } from '@/src/services/analyticsService';
 import { loanBalance } from '@/src/services/loanService';
-import { getRecurring, frequencyLabel, daysUntil } from '@/src/services/recurringService';
+import { getSubscriptions, frequencyLabel, daysUntil } from '@/src/services/recurringService';
 
 const TITLES: Record<string, string> = {
   subscriptions: 'Suscripciones',
@@ -41,7 +41,7 @@ export default function InsightScreen() {
   let body: React.ReactNode;
 
   if (metric === 'subscriptions') {
-    const list = getRecurring(true).filter((r) => !r.isArchived);
+    const list = getSubscriptions(true).filter((r) => !r.isArchived);
     const total = list.filter((r) => r.type === 'expense').reduce((s, r) => s + r.amount, 0);
     body = (
       <>

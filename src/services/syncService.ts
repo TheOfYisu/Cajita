@@ -21,7 +21,10 @@ export interface SyncStatus {
   cloudAvailable: boolean;
 }
 
-export function getPendingCounts(): { accounts: number; categories: number; transactions: number; loans: number } {
+export function getPendingCounts(): {
+  accounts: number; categories: number; transactions: number; loans: number;
+  recurring: number; recurringPayments: number; cashWithdrawals: number;
+} {
   const database = getDb();
   const count = (table: string, states: string[]): number => {
     const placeholders = states.map(() => '?').join(', ');
@@ -36,6 +39,9 @@ export function getPendingCounts(): { accounts: number; categories: number; tran
     categories: count('categories', ['pending', 'deleted']),
     transactions: count('transactions', ['pending', 'deleted']),
     loans: count('loans', ['pending', 'deleted']),
+    recurring: count('recurring', ['pending', 'deleted']),
+    recurringPayments: count('recurring_payments', ['pending', 'deleted']),
+    cashWithdrawals: count('cash_withdrawals', ['pending', 'deleted']),
   };
 }
 
@@ -47,7 +53,9 @@ export function getLastSyncAt(): number | null {
   return row ? parseInt(row.value, 10) : null;
 }
 
-export function markSynced(tables: string[] = ['accounts', 'categories', 'transactions', 'loans']): void {
+export function markSynced(
+  tables: string[] = ['accounts', 'categories', 'transactions', 'loans', 'recurring', 'recurring_payments', 'cash_withdrawals'],
+): void {
   const database = getDb();
   const t = Date.now();
   for (const table of tables) {
@@ -83,7 +91,7 @@ export async function syncWithCloud(): Promise<SyncStatus> {
   }
 
   return {
-    pendingUploads: pending.accounts + pending.categories + pending.transactions + pending.loans,
+    pendingUploads: Object.values(pending).reduce((s, n) => s + n, 0),
     lastSyncAt: getLastSyncAt(),
     isSyncing: false,
     cloudAvailable: Boolean(nativeSync?.available),
@@ -92,9 +100,18 @@ export async function syncWithCloud(): Promise<SyncStatus> {
 
 export function exportBackup(): string {
   const database = getDb();
-  const accounts = database.getAllSync('SELECT * FROM accounts WHERE deletedAt IS NULL');
-  const categories = database.getAllSync('SELECT * FROM categories WHERE deletedAt IS NULL');
-  const transactions = database.getAllSync('SELECT * FROM transactions WHERE deletedAt IS NULL');
-  const loans = database.getAllSync('SELECT * FROM loans WHERE deletedAt IS NULL');
-  return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), accounts, categories, transactions, loans });
+  const all = (t: string) => database.getAllSync(`SELECT * FROM ${t} WHERE deletedAt IS NULL`);
+  return JSON.stringify({
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    accounts: all('accounts'),
+    categories: all('categories'),
+    transactions: all('transactions'),
+    loans: all('loans'),
+    people: all('people'),
+    budgets: all('budgets'),
+    recurring: all('recurring'),
+    recurring_payments: all('recurring_payments'),
+    cash_withdrawals: all('cash_withdrawals'),
+  });
 }

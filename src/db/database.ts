@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 export interface Account {
   id: number;
@@ -108,12 +109,17 @@ export interface Budget {
   syncState: 'synced' | 'pending' | 'deleted';
 }
 
+export type RecurringKind = 'subscription' | 'service' | 'fixed';
+
 export interface Recurring {
   id: number;
   uuid: string;
   title: string;
   amount: number;
   type: 'expense' | 'income';
+  kind: RecurringKind;
+  variableAmount: boolean;
+  dueDay: number | null;
   accountId: number;
   accountUuid: string;
   categoryId: number | null;
@@ -131,14 +137,110 @@ export interface Recurring {
   syncState: 'synced' | 'pending' | 'deleted';
 }
 
+/** Un pago (o pendiente) de un gasto fijo/servicio para un mes concreto. */
+export interface RecurringPayment {
+  id: number;
+  uuid: string;
+  recurringId: number;
+  recurringUuid: string;
+  periodKey: string; // 'YYYY-MM' del mes contable que cubre
+  dueDate: number;
+  paidAt: number | null;
+  amount: number | null;
+  transactionId: number | null;
+  transactionUuid: string | null;
+  skipped: boolean;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt: number | null;
+  syncState: 'synced' | 'pending' | 'deleted';
+}
+
+/** Un retiro de efectivo: "sobre" con saldo que se descuenta con gastos en efectivo. */
+export interface CashWithdrawal {
+  id: number;
+  uuid: string;
+  amount: number;
+  accountId: number;
+  accountUuid: string;
+  fromAccountId: number | null;
+  fromAccountUuid: string | null;
+  date: number;
+  note: string;
+  transactionId: number | null;
+  transactionUuid: string | null;
+  closedAt: number | null;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt: number | null;
+  syncState: 'synced' | 'pending' | 'deleted';
+}
+
 let db: SQLite.SQLiteDatabase | null = null;
+
+/**
+ * Clave de SQLCipher, cargada una sola vez al arranque por `DbGate` (ver
+ * `src/db/encryption.ts`). Se guarda aquí para que `getDb()` siga siendo síncrono.
+ */
+let dbKey: string | null = null;
+export function setDbKey(hex: string): void {
+  dbKey = hex;
+}
+
+/**
+ * Hook opcional: se invoca tras cada escritura (`runSync`) sobre la BD. Lo usa el
+ * backup de iCloud para disparar copias automáticas. Ver `cloudBackupService.ts`.
+ */
+let onDbWrite: (() => void) | null = null;
+export function setOnDbWrite(fn: (() => void) | null): void {
+  onDbWrite = fn;
+}
+
+/** Devuelve la BD envuelta en un Proxy que avisa de cada `runSync` (escritura). */
+function makeWriteProxy(database: SQLite.SQLiteDatabase): SQLite.SQLiteDatabase {
+  return new Proxy(database, {
+    get(target, prop, receiver) {
+      const value = Reflect.get(target, prop, receiver);
+      if (typeof value === 'function') {
+        if (prop === 'runSync') {
+          return (...args: unknown[]) => {
+            const result = value.apply(target, args);
+            onDbWrite?.();
+            return result;
+          };
+        }
+        // Enlaza los métodos al objeto real para que `this` no apunte al Proxy.
+        return value.bind(target);
+      }
+      return value;
+    },
+  });
+}
+
+/** Cierra la conexión y la reinicia para poder reemplazar el archivo (restauración). */
+export function closeDbForRestore(): void {
+  if (db) {
+    try {
+      db.closeSync();
+    } catch {
+      /* ignora */
+    }
+    db = null;
+  }
+}
 
 export function getDb(): SQLite.SQLiteDatabase {
   if (!db) {
     db = SQLite.openDatabaseSync('cajita.db');
+    if (Platform.OS !== 'web') {
+      if (!dbKey) throw new Error('DB key no inicializada: llama setDbKey() antes de getDb()');
+      // PRAGMA key debe ser la primera sentencia sobre la conexión.
+      db.execSync(`PRAGMA key = "x'${dbKey}'"`);
+      db.execSync('PRAGMA cipher_memory_security = ON');
+    }
     initSchema();
   }
-  return db;
+  return makeWriteProxy(db);
 }
 
 function initSchema(): void {
@@ -261,6 +363,9 @@ function initSchema(): void {
       title TEXT NOT NULL DEFAULT '',
       amount REAL NOT NULL DEFAULT 0,
       type TEXT NOT NULL DEFAULT 'expense',
+      kind TEXT NOT NULL DEFAULT 'subscription',
+      variableAmount INTEGER NOT NULL DEFAULT 0,
+      dueDay INTEGER,
       accountId INTEGER NOT NULL REFERENCES accounts(id),
       accountUuid TEXT NOT NULL,
       categoryId INTEGER REFERENCES categories(id),
@@ -277,6 +382,48 @@ function initSchema(): void {
       deletedAt INTEGER,
       syncState TEXT NOT NULL DEFAULT 'pending'
     );
+
+    CREATE TABLE IF NOT EXISTS recurring_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid TEXT NOT NULL UNIQUE,
+      recurringId INTEGER NOT NULL REFERENCES recurring(id),
+      recurringUuid TEXT NOT NULL,
+      periodKey TEXT NOT NULL,
+      dueDate INTEGER NOT NULL,
+      paidAt INTEGER,
+      amount REAL,
+      transactionId INTEGER REFERENCES transactions(id),
+      transactionUuid TEXT,
+      skipped INTEGER NOT NULL DEFAULT 0,
+      createdAt INTEGER NOT NULL,
+      updatedAt INTEGER NOT NULL,
+      deletedAt INTEGER,
+      syncState TEXT NOT NULL DEFAULT 'pending',
+      UNIQUE(recurringId, periodKey)
+    );
+
+    CREATE TABLE IF NOT EXISTS cash_withdrawals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid TEXT NOT NULL UNIQUE,
+      amount REAL NOT NULL DEFAULT 0,
+      accountId INTEGER NOT NULL REFERENCES accounts(id),
+      accountUuid TEXT NOT NULL,
+      fromAccountId INTEGER REFERENCES accounts(id),
+      fromAccountUuid TEXT,
+      date INTEGER NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      transactionId INTEGER REFERENCES transactions(id),
+      transactionUuid TEXT,
+      closedAt INTEGER,
+      createdAt INTEGER NOT NULL,
+      updatedAt INTEGER NOT NULL,
+      deletedAt INTEGER,
+      syncState TEXT NOT NULL DEFAULT 'pending'
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_recpay_period ON recurring_payments(periodKey);
+    CREATE INDEX IF NOT EXISTS idx_recpay_recurring ON recurring_payments(recurringId);
+    CREATE INDEX IF NOT EXISTS idx_cashw_account ON cash_withdrawals(accountId, date);
 
     CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(accountId);
     CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
@@ -302,6 +449,9 @@ function initSchema(): void {
   ensureColumn('accounts', 'linkedAccountId', 'linkedAccountId INTEGER');
   ensureColumn('accounts', 'excludeFromTotals', 'excludeFromTotals INTEGER NOT NULL DEFAULT 0');
   ensureColumn('loans', 'counterpartyKind', "counterpartyKind TEXT NOT NULL DEFAULT 'entity'");
+  ensureColumn('recurring', 'kind', "kind TEXT NOT NULL DEFAULT 'subscription'");
+  ensureColumn('recurring', 'variableAmount', 'variableAmount INTEGER NOT NULL DEFAULT 0');
+  ensureColumn('recurring', 'dueDay', 'dueDay INTEGER');
 }
 
 export function now(): number {
@@ -409,4 +559,31 @@ export function monthRange(monthStartDay = 1, ref = Date.now()): { from: number;
   }
   const end = new Date(start.getFullYear(), start.getMonth() + 1, monthStartDay);
   return { from: start.getTime(), to: end.getTime() - 1 };
+}
+
+/**
+ * Clave del mes contable ('YYYY-MM') al que pertenece `ref` según `monthStartDay`.
+ * Se ancla al mes de inicio del periodo (el de `from` de `monthRange`).
+ */
+export function periodKeyOf(ref = Date.now(), monthStartDay = 1): string {
+  const start = new Date(monthRange(monthStartDay, ref).from);
+  return `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/** Fecha de vencimiento (timestamp, 09:00) del día `dueDay` dentro del periodo `periodKey`. */
+export function dueDateForPeriod(periodKey: string, dueDay: number, monthStartDay = 1): number {
+  const [y, m] = periodKey.split('-').map(Number);
+  // El periodo 'y-m' empieza en monthStartDay de ese mes y termina antes del mismo día del mes siguiente.
+  const periodStart = new Date(y, m - 1, monthStartDay);
+  const day = Math.max(1, Math.min(31, dueDay || 1));
+  // Candidato en el mes de inicio del periodo.
+  let due = new Date(y, m - 1, day, 9, 0, 0, 0);
+  // Ajuste por meses cortos (p. ej. día 31 en febrero -> último día).
+  if (due.getMonth() !== m - 1) due = new Date(y, m, 0, 9, 0, 0, 0);
+  // Si el día cae antes del inicio del periodo contable, pertenece al mes siguiente.
+  if (due.getTime() < periodStart.getTime()) {
+    due = new Date(y, m, day, 9, 0, 0, 0);
+    if (due.getMonth() !== m % 12) due = new Date(y, m + 1, 0, 9, 0, 0, 0);
+  }
+  return due.getTime();
 }

@@ -25,7 +25,7 @@ function baseRange(key: Exclude<PeriodKey, 'custom'>, monthStartDay: number): { 
 }
 
 export default function StatsScreen() {
-  const { netWorth, totalAssets, totalDebt, summary } = useApp();
+  const { netWorth, totalAssets, totalDebt, summary, cash } = useApp();
   const { colors, prefs } = useTheme();
   const hide = prefs.hideBalances;
   const [period, setPeriod] = React.useState<PeriodKey>('month');
@@ -98,6 +98,8 @@ export default function StatsScreen() {
             <Tile label="Debo a personas" value={formatMoney(summary.debtPeople, prefs.currency, hide)} color={colors.negative} icon="people" onPress={() => router.push('/insight/debt-people')} colors={colors} />
             <Tile label="Me deben" value={formatMoney(summary.owedToMe, prefs.currency, hide)} color={colors.positive} icon="cash" onPress={() => router.push('/insight/owed')} colors={colors} />
             <Tile label="Suscripciones" value={formatMoney(summary.subscriptionsMonthly, prefs.currency, hide)} color={colors.warning} icon="repeat" onPress={() => router.push('/insight/subscriptions')} colors={colors} />
+            <Tile label="Gastos fijos (mes)" value={formatMoney(summary.fixedMonthly, prefs.currency, hide)} color={colors.warning} icon="home" onPress={() => router.push('/settings/recurring')} colors={colors} />
+            <Tile label="Efectivo restante" value={formatMoney(cash.totalRemaining, prefs.currency, hide)} color={colors.warning} icon="wallet" onPress={() => router.push('/cash' as never)} colors={colors} />
           </View>
 
           <SectionTitle>Ingresos vs gastos por mes</SectionTitle>

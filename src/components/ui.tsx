@@ -735,6 +735,25 @@ export function ProgressBar({ pct, color }: { pct: number; color?: string }) {
   );
 }
 
+export function StatusBadge({ label, color, icon }: { label: string; color: string; icon?: IconName }) {
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingVertical: 3,
+        paddingHorizontal: 8,
+        borderRadius: 999,
+        backgroundColor: color + '22',
+      }}
+    >
+      {icon ? <Ionicons name={icon} size={11} color={color} /> : null}
+      <Text style={{ color, fontSize: 11, fontWeight: '700' }}>{label}</Text>
+    </View>
+  );
+}
+
 export function EmptyState({ icon, title, subtitle }: { icon: IconName; title: string; subtitle?: string }) {
   const { colors } = useTheme();
   return (

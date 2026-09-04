@@ -5,7 +5,11 @@ import { getLoans } from '@/src/services/loanService';
 import { getPeople } from '@/src/services/personService';
 import { getTransactions } from '@/src/services/transactionService';
 import { getBudgets } from '@/src/services/budgetService';
-import { runDueRecurring, getRecurring } from '@/src/services/recurringService';
+import {
+  runDueRecurring, getSubscriptions, getFixedForMonth,
+  fixedMonthlySummary, FixedMonthlySummary,
+} from '@/src/services/recurringService';
+import { activeWithdrawals, lastMonthLeftover, WithdrawalView } from '@/src/services/cashService';
 import { loanBalance as loanBalanceOf } from '@/src/services/loanService';
 import { syncSubscriptionNotifications } from '@/src/services/notificationService';
 import {
@@ -40,8 +44,11 @@ interface AppState {
     debtPeople: number;
     owedToMe: number;
     subscriptionsMonthly: number;
+    fixedMonthly: number;
     debtPaidThisMonth: number;
   };
+  fixed: FixedMonthlySummary;
+  cash: { active: WithdrawalView[]; totalRemaining: number; lastMonthLeftover: number };
   refresh: () => void;
 }
 
@@ -134,12 +141,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     let subscriptionsMonthly = 0;
     try {
-      for (const r of getRecurring()) {
+      for (const r of getSubscriptions()) {
         if (r.type !== 'expense') continue;
         subscriptionsMonthly += r.amount * (MONTHLY_FACTOR[r.frequency] ?? 1);
       }
     } catch {
       /* noop */
+    }
+
+    let fixed: FixedMonthlySummary;
+    try {
+      fixed = fixedMonthlySummary();
+    } catch {
+      fixed = { periodKey: '', items: [], total: 0, paidTotal: 0, pendingTotal: 0, paidCount: 0, pendingCount: 0, overdueCount: 0 };
+    }
+
+    let cash: AppState['cash'];
+    try {
+      const active = activeWithdrawals();
+      cash = {
+        active,
+        totalRemaining: active.reduce((s, w) => s + w.remaining, 0),
+        lastMonthLeftover: lastMonthLeftover(),
+      };
+    } catch {
+      cash = { active: [], totalRemaining: 0, lastMonthLeftover: 0 };
     }
 
     const totalDebt = debtEntities + debtPeople;
@@ -157,7 +183,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       netWorth: totalAssets + owedToMe - totalDebt,
       primaryAccountId,
       month: { income, expense, net: income - expense, transfers },
-      summary: { debtEntities, debtPeople, owedToMe, subscriptionsMonthly, debtPaidThisMonth },
+      summary: { debtEntities, debtPeople, owedToMe, subscriptionsMonthly, fixedMonthly: fixed.total, debtPaidThisMonth },
+      fixed,
+      cash,
       refresh,
     };
   }, [tick, refresh]);
@@ -195,6 +223,12 @@ export function bootstrap(): void {
   }
   try {
     runDueRecurring();
+  } catch {
+    /* noop */
+  }
+  // Materializa el checklist de gastos fijos del mes en curso.
+  try {
+    getFixedForMonth();
   } catch {
     /* noop */
   }

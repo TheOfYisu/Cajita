@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { getRecurring, nextOccurrences, frequencyLabel } from './recurringService';
+import { getSubscriptions, nextOccurrences, frequencyLabel, getFixedForMonth } from './recurringService';
 import { getPerson } from './personService';
 import { getPrefs } from './prefsService';
 import { getDb } from '../db/database';
@@ -78,8 +78,11 @@ export async function syncSubscriptionNotifications(): Promise<void> {
     return;
   }
   // No pedir permiso si aún no hay ninguna suscripción con aviso.
-  const items = getRecurring().filter((r) => r.notify && r.type === 'expense');
-  if (items.length === 0) {
+  const items = getSubscriptions().filter((r) => r.notify && r.type === 'expense');
+  const fixedDue = getFixedForMonth().filter(
+    (it) => it.recurring.notify && (it.status === 'pending' || it.status === 'overdue'),
+  );
+  if (items.length === 0 && fixedDue.length === 0) {
     try {
       const all = await Notifications.getAllScheduledNotificationsAsync();
       await Promise.all(
@@ -157,6 +160,43 @@ export async function syncSubscriptionNotifications(): Promise<void> {
             },
           });
         }
+      }
+    }
+
+    // Recordatorios de gastos fijos / servicios pendientes del mes.
+    for (const it of fixedDue) {
+      const r = it.recurring;
+      const due = it.payment.dueDate;
+      const lead = Math.max(1, r.leadDays);
+      const points: { when: Date; title: string; body: string }[] = [];
+      const est = r.variableAmount ? `~${fmt(r.amount, prefs.currency)}` : fmt(r.amount, prefs.currency);
+
+      const leadDate = at9am(due - lead * 86400000);
+      if (leadDate.getTime() > nowTs && lead > 1) {
+        points.push({
+          when: leadDate,
+          title: `${r.title}: vence pronto`,
+          body: `En ${lead} días toca pagar ${r.title} (${est}). Márcalo como pagado cuando lo hagas.`,
+        });
+      }
+      const sameDay = at9am(due);
+      if (sameDay.getTime() > nowTs) {
+        points.push({
+          when: sameDay,
+          title: `Hoy vence: ${r.title}`,
+          body: `Hoy toca pagar ${r.title} (${est}).`,
+        });
+      }
+      for (const p of points) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: p.title,
+            body: p.body,
+            data: { tag: TAG, recurringId: r.id, paymentId: it.payment.id },
+            ...(Platform.OS === 'android' ? { channelId: 'subscriptions' } : null),
+          },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: p.when },
+        });
       }
     }
 
