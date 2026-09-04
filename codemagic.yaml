@@ -1,30 +1,12 @@
 # Codemagic CI/CD — Cajita (Expo SDK 54, managed workflow)
-# Guía: https://docs.codemagic.io/yaml-quick-start/building-a-react-native-app/
-#
-# Los builds nativos se generan en CI con `expo prebuild` (no se versionan ios/ ni android/).
-# Se disparan al crear un tag `v*` (p. ej. `git tag v1.0.1 && git push --tags`).
-#
-# ANTES DEL PRIMER BUILD, configura en el panel de Codemagic:
-#  · iOS  → Team settings ▸ Integrations ▸ App Store Connect  (API key). Pon su nombre en
-#           `integrations.app_store_connect` abajo. Con eso Codemagic gestiona firma y perfiles.
-#           Rellena `APP_STORE_APPLE_ID` con el Apple ID numérico de la app.
-#  · Android (a futuro) → sube el keystore en App settings ▸ Code signing identities con
-#           referencia `cajita_keystore` y descomenta el bloque `android_signing` + `sed`
-#           de versión + `google_play`.
-#
-# iCloud: la app declara `usesIcloudStorage` + contenedor `iCloud.com.cajita.app`.
-# En Apple Developer ▸ Identifiers habilita iCloud (con CloudKit) para el App ID
-# `com.cajita.app` y crea el contenedor `iCloud.com.cajita.app`, o el perfil de
-# aprovisionamiento que genere Codemagic no incluirá la capacidad de iCloud.
-
 workflows:
-  # ───────────────────────────────────────────────────────────────────────────
   ios-release:
     name: Cajita iOS — TestFlight
     max_build_duration: 90
     instance_type: mac_mini_m2
     integrations:
-      app_store_connect: CodemagicAppStore   # ← nombre EXACTO de tu integración App Store Connect
+      app_store_connect: CodemagicAppStore
+      apple_developer_portal: CodemagicDeveloperPortal
     environment:
       ios_signing:
         distribution_type: app_store
@@ -35,12 +17,12 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/Cajita.xcworkspace"
         XCODE_SCHEME: "Cajita"
-        APP_STORE_APPLE_ID: 0000000000        # ← Apple ID numérico de la app en App Store Connect
+        APP_STORE_APPLE_ID: "6808463218" # ID de Apple del app en App Store Connect
     triggering:
       events:
         - tag
       tag_patterns:
-        - pattern: 'v*'
+        - pattern: "v*"
           include: true
     scripts:
       - name: Instalar dependencias (npm ci)
@@ -72,31 +54,24 @@ workflows:
         submit_to_app_store: false
       email:
         recipients:
-          - jesudgm.11@gmail.com
+          - jesudgm.11@proton.me
         notify:
           success: true
           failure: true
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # Android — a futuro. No corre hasta que subas el keystore `cajita_keystore`
-  # y descomentes `android_signing`. Mientras tanto genera un .aab sin firmar.
   android-release:
     name: Cajita Android — .aab
     max_build_duration: 90
     instance_type: linux_x2
     environment:
-      # android_signing:
-      #   - cajita_keystore
       node: 22
       vars:
         PACKAGE_NAME: "com.cajita.app"
-      # groups:
-      #   - google_play        # variables de la service account de Google Play
     triggering:
       events:
         - tag
       tag_patterns:
-        - pattern: 'v*'
+        - pattern: "v*"
           include: true
     scripts:
       - name: Instalar dependencias (npm ci)
@@ -117,7 +92,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - jesudgm.11@gmail.com
+          - jesudgm.11@proton.me
         notify:
           success: true
           failure: true

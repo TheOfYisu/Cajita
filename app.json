@@ -17,7 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.cajita.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false,
+        "ITSAppUsesNonExemptEncryption": true,
         "NSUbiquitousContainers": {
           "iCloud.com.cajita.app": {
             "NSUbiquitousContainerIsDocumentScopePublic": true,
