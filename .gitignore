@@ -40,3 +40,4 @@ yarn-error.*
 /ios
 /android
 import_cajita.csv
+import_cajita_real.csv

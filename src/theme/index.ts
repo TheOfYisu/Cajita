@@ -1,4 +1,4 @@
-import { DefaultTheme, DarkTheme, Theme } from '@react-navigation/native';
+import { DefaultTheme, DarkTheme, Theme } from 'expo-router/react-navigation';
 import { Ionicons } from '@expo/vector-icons';
 
 export type IconName = keyof typeof Ionicons.glyphMap;

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Alert, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
 import { Screen, Card, Divider } from '@/src/components/ui';
@@ -130,6 +131,14 @@ export default function SettingsScreen() {
         { icon: 'cash', label: 'Retiros de efectivo', hint: 'Registra un retiro y ve cuánto te queda', onPress: () => router.push('/cash' as never) },
       ],
     },
+    {
+      title: 'Acerca de',
+      items: [
+        { icon: 'logo-github', label: 'GitHub', hint: 'github.com/TheOfYisu', onPress: () => openLink('https://github.com/TheOfYisu') },
+        { icon: 'logo-linkedin', label: 'LinkedIn', hint: 'linkedin.com/in/jesudgm', onPress: () => openLink('https://www.linkedin.com/in/jesudgm/') },
+        { icon: 'code-slash', label: 'Autor', hint: 'TheOfYisu', onPress: () => openLink('https://github.com/TheOfYisu') },
+      ],
+    },
   ];
 
   return (
@@ -172,10 +181,14 @@ export default function SettingsScreen() {
       </Text>
       <View style={{ height: 8 }} />
       <Text style={{ color: colors.textMuted, fontSize: 11, textAlign: 'center' }} onPress={refresh}>
-        v1.0.0
+        v1.0.5
       </Text>
     </Screen>
   );
+}
+
+function openLink(url: string) {
+  void WebBrowser.openBrowserAsync(url);
 }
 
 function RowItem({ icon, label, hint, onPress, color, colors }: { icon: IconName; label: string; hint?: string; onPress: () => void; color?: string; colors: ReturnType<typeof useTheme>['colors'] }) {

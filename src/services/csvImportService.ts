@@ -189,17 +189,22 @@ const BALANCE_TITLES = ['balance inicial', 'saldo inicial', 'balance correction'
 export function clearAllData(): void {
   const database = getDb();
   database.execSync(`
+    DELETE FROM recurring_payments;
+    DELETE FROM cash_withdrawals;
     DELETE FROM transactions;
     DELETE FROM budgets;
     DELETE FROM recurring;
     DELETE FROM loans;
+    DELETE FROM people;
     DELETE FROM accounts;
     DELETE FROM categories;
     DELETE FROM sync_metadata;
   `);
   // Reiniciar secuencias autoincrementales para ids limpios
   database.execSync(`
-    DELETE FROM sqlite_sequence WHERE name IN ('transactions','budgets','recurring','loans','accounts','categories','sync_metadata');
+    DELETE FROM sqlite_sequence WHERE name IN
+      ('transactions','budgets','recurring','recurring_payments','cash_withdrawals',
+       'loans','people','accounts','categories','sync_metadata');
   `);
 }
 

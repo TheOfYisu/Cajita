@@ -204,4 +204,10 @@ GPL-3.0 — ver [LICENSE](LICENSE).
 
 ---
 
+## 👤 Autor
+
+Desarrollado por [**TheOfYisu**](https://github.com/TheOfYisu).
+
+---
+
 *Hecho con 💚 para llevar las finanzas personales con control total de tus datos.*
