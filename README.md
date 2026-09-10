@@ -91,7 +91,7 @@ El desarrollo es en Windows, así que la compilación nativa corre en la nube.
 El repo trae `codemagic.yaml` con dos workflows (`ios-release`, `android-release`) que generan los proyectos nativos en CI con `npx expo prebuild`. Se disparan al crear un tag `v*`:
 
 ```bash
-git tag v1.0.6 && git push origin v1.0.6
+git tag v1.0.7 && git push origin v1.0.7
 ```
 
 **EAS Build (alternativa)**
@@ -101,7 +101,7 @@ npx eas-cli login
 npx eas-cli build --platform ios
 ```
 
-> La configuración de iCloud ya está en `app.json` (`NSUbiquitousContainers` + entitlements vía `plugins/withCajitaEntitlements.js`). El App ID `com.cajita.app` debe tener la capacidad **iCloud** habilitada en Apple Developer con el contenedor `iCloud.com.cajita.app`.
+> La configuración de iCloud ya está en `app.json` (`NSUbiquitousContainers` + entitlements vía `plugins/withCajitaEntitlements.js`). El App ID `com.cajita.app` debe tener la capacidad **iCloud** habilitada en Apple Developer con el contenedor `iCloud.com.cajita.app`. El entitlement de Key-Value Storage usa `$(TeamIdentifierPrefix)$(CFBundleIdentifier)` para coincidir con el provisioning profile.
 
 ---
 

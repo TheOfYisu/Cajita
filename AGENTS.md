@@ -24,7 +24,8 @@ Componentes:
 
 - `modules/cajita-cloud-sync/` — módulo local de Expo (Swift): `upload`/`download`/
   `isCloudAvailable`/`cloudFileExists` con `NSFileCoordinator`. Solo iOS.
-- `plugins/withCajitaEntitlements.js` — añade los entitlements iCloud (CloudDocuments).
+- `plugins/withCajitaEntitlements.js` — añade los entitlements iCloud (CloudDocuments)
+  y usa `$(TeamIdentifierPrefix)$(CFBundleIdentifier)` para Key-Value Storage.
 - `src/services/cloudBackupService.ts` — debounce tras `getDb().runSync()`, snapshot
   consistente (`wal_checkpoint(TRUNCATE)`), protección anti-clobber (no pisa un backup
   remoto con una BD local vacía), restauración automática y manual.
