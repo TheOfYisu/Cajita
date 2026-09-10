@@ -89,10 +89,9 @@ transparente para el usuario y no impide la interoperabilidad.
 
 ## 7. Configuración en App Store Connect
 
-El proyecto declara `ITSAppUsesNonExemptEncryption: true` porque el binario incluye
-SQLCipher, una librería de terceros que cifra la base de datos local con AES-256.
-La bandera no activa ni desactiva el cifrado: informa a Apple de que el binario
-contiene cifrado que debe declararse en Export Compliance.
+El proyecto declara `ITSAppUsesNonExemptEncryption: false` porque la distribución
+se acoge a la exención aplicable al uso de cifrado. Esta bandera no activa ni
+desactiva SQLCipher ni el cifrado de la base de datos.
 
 Al subir el build, completar el cuestionario de **Export Compliance** y adjuntar
 este documento cuando Apple lo solicite. La app usa algoritmos estándar para

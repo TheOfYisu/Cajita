@@ -1,6 +1,6 @@
-const { withEntitlementsPlist } = require('@expo/config-plugins');
+const { withEntitlementsPlist } = require("@expo/config-plugins");
 
-const CONTAINER_ID = 'iCloud.com.cajita.app';
+const CONTAINER_ID = "iCloud.com.cajita.app";
 
 /**
  * Añade los entitlements de iCloud necesarios para el contenedor de ubiquity
@@ -11,11 +11,15 @@ const CONTAINER_ID = 'iCloud.com.cajita.app';
  */
 module.exports = function withCajitaEntitlements(config) {
   return withEntitlementsPlist(config, (c) => {
-    c.modResults['com.apple.developer.icloud-container-identifiers'] = [CONTAINER_ID];
-    c.modResults['com.apple.developer.icloud-services'] = ['CloudDocuments'];
+    c.modResults["com.apple.developer.icloud-container-identifiers"] = [
+      CONTAINER_ID,
+    ];
+    c.modResults["com.apple.developer.icloud-services"] = ["CloudDocuments"];
     // Apple valida este entitlement contra el provisioning profile. No es el
     // identificador del contenedor iCloud: debe ser TeamIdentifierPrefix + bundle ID.
-    c.modResults['com.apple.developer.ubiquity-kvstore-identifier'] = '$(TeamIdentifierPrefix)$(CFBundleIdentifier)';
+    c.modResults["com.apple.developer.ubiquity-kvstore-identifier"] =
+      "$(TeamIdentifierPrefix)$(CFBundleIdentifier)";
+
     return c;
   });
 };

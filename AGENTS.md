@@ -47,9 +47,7 @@ Componentes:
 
 - **Solo iOS**. Android no tiene iCloud: allí no hay backup automático (queda el JSON manual).
 - En Expo Go el módulo no existe → `getNative()` devuelve null y el backup es no-op.
-- `ITSAppUsesNonExemptEncryption: true` declara el uso de cifrado no exento para el build iOS.
-  SQLCipher sigue activo y su documentación está en `docs/export-compliance-encryption.md`.
-  Al subir el build, responder el cuestionario de App Store Connect y adjuntar la
-  documentación si Apple la solicita.
+- `ITSAppUsesNonExemptEncryption: false` declara que el uso de cifrado se acoge a una
+  exención para el build iOS. SQLCipher sigue activo; esta bandera no desactiva la BD cifrada.
 - El backup remoto es el archivo SQLCipher tal cual: cifrado en reposo, pero requiere
   la clave correcta (iCloud Keychain) para abrirlo en otro dispositivo.
