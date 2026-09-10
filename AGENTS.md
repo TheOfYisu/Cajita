@@ -5,6 +5,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 # Base de datos cifrada (SQLCipher)
 
 `cajita.db` está cifrada con SQLCipher (`useSQLCipher` en `app.json`). Implica:
+
 - **No funciona en Expo Go** — hace falta dev build (`npx expo run:android`, dev-client, Codemagic/EAS).
 - La clave se carga al arranque en `src/components/DbGate.tsx` → `setDbKey()` (`src/db/database.ts`)
   antes de montar los providers. `getDb()` sigue siendo síncrono.
@@ -20,6 +21,7 @@ ubiquity `iCloud.com.cajita.app`. Al arrancar, si la BD local está vacía o no 
 (celular nuevo / reinstalación), se restaura desde iCloud.
 
 Componentes:
+
 - `modules/cajita-cloud-sync/` — módulo local de Expo (Swift): `upload`/`download`/
   `isCloudAvailable`/`cloudFileExists` con `NSFileCoordinator`. Solo iOS.
 - `plugins/withCajitaEntitlements.js` — añade los entitlements iCloud (CloudDocuments).
@@ -44,9 +46,9 @@ Componentes:
 
 - **Solo iOS**. Android no tiene iCloud: allí no hay backup automático (queda el JSON manual).
 - En Expo Go el módulo no existe → `getNative()` devuelve null y el backup es no-op.
-- `ITSAppUsesNonExemptEncryption: true` (SQLCipher = encriptación estándar no exenta).
-  Documentación de export compliance en `docs/export-compliance-encryption.md`; al subir
-  build responder el cuestionario de App Store Connect (mercado masivo, AES-256) y, si
-  Apple lo pide, adjuntar el documento o tramitar un ERN (BIS).
+- `ITSAppUsesNonExemptEncryption: true` declara el uso de cifrado no exento para el build iOS.
+  SQLCipher sigue activo y su documentación está en `docs/export-compliance-encryption.md`.
+  Al subir el build, responder el cuestionario de App Store Connect y adjuntar la
+  documentación si Apple la solicita.
 - El backup remoto es el archivo SQLCipher tal cual: cifrado en reposo, pero requiere
   la clave correcta (iCloud Keychain) para abrirlo en otro dispositivo.

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -15,21 +15,22 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Modal,
-} from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import * as Haptics from 'expo-haptics';
-import { useTheme } from '../theme/ThemeProvider';
-import { useApp } from '../store/appStore';
-import { IconName, SWATCHES, safeIcon } from '../theme';
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { useTheme } from "../theme/ThemeProvider";
+import { IconName, SWATCHES, safeIcon } from "../theme";
 
-export function formatMoney(v: number, currency = 'COP', hide = false): string {
-  if (hide) return '••••••';
+export function formatMoney(v: number, currency = "COP", hide = false): string {
+  if (hide) return "••••••";
   const abs = Math.abs(v);
-  const formatted = new Intl.NumberFormat('es-CO', {
-    style: 'currency',
+  const formatted = new Intl.NumberFormat("es-CO", {
+    style: "currency",
     currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
@@ -38,22 +39,26 @@ export function formatMoney(v: number, currency = 'COP', hide = false): string {
 }
 
 export function formatDate(ts: number): string {
-  return new Date(ts).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(ts).toLocaleDateString("es-CO", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export function Screen({
   children,
   scroll = true,
   contentStyle,
-  edges = ['top'],
+  edges = ["top"],
   fab,
   onFabPress,
-  fabIcon = 'add',
+  fabIcon = "add",
 }: {
   children: React.ReactNode;
   scroll?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
-  edges?: ('top' | 'bottom')[];
+  edges?: ("top" | "bottom")[];
   fab?: React.ReactNode;
   onFabPress?: () => void;
   fabIcon?: IconName;
@@ -62,7 +67,10 @@ export function Screen({
   const inner = scroll ? (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={[{ padding: 16, paddingBottom: onFabPress || fab ? 96 : 48 }, contentStyle]}
+      contentContainerStyle={[
+        { padding: 16, paddingBottom: onFabPress || fab ? 96 : 48 },
+        contentStyle,
+      ]}
       keyboardShouldPersistTaps="handled"
     >
       {children}
@@ -76,21 +84,21 @@ export function Screen({
       {onFabPress ? (
         <Pressable
           onPress={() => {
-            if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
+            if (Platform.OS !== "web") Haptics.selectionAsync().catch(() => {});
             onFabPress();
           }}
           style={({ pressed }) => [
             {
-              position: 'absolute',
+              position: "absolute",
               right: 20,
               bottom: 24,
               width: 56,
               height: 56,
               borderRadius: 28,
               backgroundColor: colors.accent,
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: '#000',
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
               shadowOpacity: 0.2,
               shadowRadius: 8,
               shadowOffset: { width: 0, height: 3 },
@@ -120,9 +128,9 @@ export function ScreenHeader({
   return (
     <View
       style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: StyleSheet.hairlineWidth,
@@ -133,8 +141,10 @@ export function ScreenHeader({
       <Pressable onPress={onClose ?? (() => router.back())} hitSlop={10}>
         <Ionicons name="close" size={24} color={colors.text} />
       </Pressable>
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: '800' }}>{title}</Text>
-      <View style={{ minWidth: 24, alignItems: 'flex-end' }}>{right}</View>
+      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "800" }}>
+        {title}
+      </Text>
+      <View style={{ minWidth: 24, alignItems: "flex-end" }}>{right}</View>
     </View>
   );
 }
@@ -142,11 +152,16 @@ export function ScreenHeader({
 export function useKeyboardVisible(): boolean {
   const [visible, setVisible] = React.useState(false);
   React.useEffect(() => {
-    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showEvt =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvt =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
     const s = Keyboard.addListener(showEvt, () => setVisible(true));
     const h = Keyboard.addListener(hideEvt, () => setVisible(false));
-    return () => { s.remove(); h.remove(); };
+    return () => {
+      s.remove();
+      h.remove();
+    };
   }, []);
   return visible;
 }
@@ -170,7 +185,7 @@ export function ModalScreen({
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.bg }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View style={{ paddingTop: insets.top, backgroundColor: colors.surface }}>
         <ScreenHeader
@@ -178,11 +193,25 @@ export function ModalScreen({
           onClose={onClose}
           right={
             keyboardVisible ? (
-              <Pressable onPress={() => Keyboard.dismiss()} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+              <Pressable
+                onPress={() => Keyboard.dismiss()}
+                hitSlop={8}
+                style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+              >
                 <Ionicons name="chevron-down" size={16} color={colors.accent} />
-                <Text style={{ color: colors.accent, fontWeight: '700', fontSize: 14 }}>Listo</Text>
+                <Text
+                  style={{
+                    color: colors.accent,
+                    fontWeight: "700",
+                    fontSize: 14,
+                  }}
+                >
+                  Listo
+                </Text>
               </Pressable>
-            ) : headerRight
+            ) : (
+              headerRight
+            )
           }
         />
       </View>
@@ -242,10 +271,27 @@ export function Card({
   return <View style={[base, style]}>{children}</View>;
 }
 
-export function SectionTitle({ children, style }: { children: React.ReactNode; style?: StyleProp<TextStyle> }) {
+export function SectionTitle({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: StyleProp<TextStyle>;
+}) {
   const { colors } = useTheme();
   return (
-    <Text style={[{ fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 10, marginTop: 6 }, style]}>
+    <Text
+      style={[
+        {
+          fontSize: 16,
+          fontWeight: "700",
+          color: colors.text,
+          marginBottom: 10,
+          marginTop: 6,
+        },
+        style,
+      ]}
+    >
       {children}
     </Text>
   );
@@ -253,7 +299,18 @@ export function SectionTitle({ children, style }: { children: React.ReactNode; s
 
 export function Label({ children }: { children: React.ReactNode }) {
   const { colors } = useTheme();
-  return <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textMuted, marginBottom: 6 }}>{children}</Text>;
+  return (
+    <Text
+      style={{
+        fontSize: 13,
+        fontWeight: "600",
+        color: colors.textMuted,
+        marginBottom: 6,
+      }}
+    >
+      {children}
+    </Text>
+  );
 }
 
 export function Field({
@@ -271,7 +328,12 @@ export function Field({
   value: string;
   onChangeText: (t: string) => void;
   placeholder?: string;
-  keyboardType?: 'default' | 'decimal-pad' | 'numeric' | 'email-address' | 'phone-pad';
+  keyboardType?:
+    | "default"
+    | "decimal-pad"
+    | "numeric"
+    | "email-address"
+    | "phone-pad";
   multiline?: boolean;
   autoFocus?: boolean;
   big?: boolean;
@@ -283,8 +345,8 @@ export function Field({
       {label ? <Label>{label}</Label> : null}
       <View
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
+          flexDirection: "row",
+          alignItems: "center",
           borderWidth: 1,
           borderColor: colors.border,
           backgroundColor: colors.surfaceAlt,
@@ -292,7 +354,17 @@ export function Field({
           paddingHorizontal: 12,
         }}
       >
-        {prefix ? <Text style={{ color: colors.textMuted, fontSize: big ? 22 : 15, fontWeight: '700' }}>{prefix} </Text> : null}
+        {prefix ? (
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: big ? 22 : 15,
+              fontWeight: "700",
+            }}
+          >
+            {prefix}{" "}
+          </Text>
+        ) : null}
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -305,11 +377,13 @@ export function Field({
             flex: 1,
             color: colors.text,
             fontSize: big ? 24 : 15,
-            fontWeight: big ? '800' : '500',
+            fontWeight: big ? "800" : "500",
             paddingVertical: multiline ? 12 : big ? 14 : 12,
             minHeight: multiline ? 120 : undefined,
-            textAlignVertical: multiline ? 'top' : 'center',
-            ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null),
+            textAlignVertical: multiline ? "top" : "center",
+            ...(Platform.OS === "web"
+              ? ({ outlineStyle: "none" } as object)
+              : null),
           }}
         />
       </View>
@@ -320,7 +394,7 @@ export function Field({
 export function Button({
   title,
   onPress,
-  variant = 'primary',
+  variant = "primary",
   icon,
   color,
   disabled,
@@ -329,7 +403,7 @@ export function Button({
 }: {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   icon?: IconName;
   color?: string;
   disabled?: boolean;
@@ -339,32 +413,37 @@ export function Button({
   const { colors, radius } = useTheme();
   const accent = color ?? colors.accent;
   const bg =
-    variant === 'primary' ? accent
-    : variant === 'danger' ? colors.negative
-    : variant === 'secondary' ? colors.surfaceAlt
-    : 'transparent';
+    variant === "primary"
+      ? accent
+      : variant === "danger"
+        ? colors.negative
+        : variant === "secondary"
+          ? colors.surfaceAlt
+          : "transparent";
   const fg =
-    variant === 'primary' || variant === 'danger' ? '#FFFFFF'
-    : variant === 'secondary' ? colors.text
-    : accent;
+    variant === "primary" || variant === "danger"
+      ? "#FFFFFF"
+      : variant === "secondary"
+        ? colors.text
+        : accent;
   return (
     <Pressable
       onPress={() => {
         if (disabled || loading) return;
-        if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
+        if (Platform.OS !== "web") Haptics.selectionAsync().catch(() => {});
         onPress();
       }}
       style={({ pressed }) => [
         {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
           gap: 8,
           borderRadius: radius.md,
           paddingVertical: 14,
           paddingHorizontal: 18,
           backgroundColor: bg,
-          borderWidth: variant === 'ghost' ? 1 : 0,
+          borderWidth: variant === "ghost" ? 1 : 0,
           borderColor: accent,
           opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
         },
@@ -376,7 +455,9 @@ export function Button({
       ) : (
         <>
           {icon ? <Ionicons name={icon} size={18} color={fg} /> : null}
-          <Text style={{ color: fg, fontWeight: '700', fontSize: 15 }}>{title}</Text>
+          <Text style={{ color: fg, fontWeight: "700", fontSize: 15 }}>
+            {title}
+          </Text>
         </>
       )}
     </Pressable>
@@ -402,8 +483,8 @@ export function Chip({
     <Pressable
       onPress={onPress}
       style={{
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: "row",
+        alignItems: "center",
         gap: 6,
         paddingVertical: 8,
         paddingHorizontal: 14,
@@ -413,8 +494,22 @@ export function Chip({
         borderColor: active ? c : colors.border,
       }}
     >
-      {icon ? <Ionicons name={icon} size={14} color={active ? '#FFF' : colors.textMuted} /> : null}
-      <Text style={{ color: active ? '#FFF' : colors.text, fontWeight: '600', fontSize: 13 }}>{label}</Text>
+      {icon ? (
+        <Ionicons
+          name={icon}
+          size={14}
+          color={active ? "#FFF" : colors.textMuted}
+        />
+      ) : null}
+      <Text
+        style={{
+          color: active ? "#FFF" : colors.text,
+          fontWeight: "600",
+          fontSize: 13,
+        }}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -438,7 +533,12 @@ export function PickRow({
   return (
     <Pressable
       onPress={onPress}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11 }}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 11,
+      }}
     >
       {icon ? (
         <View
@@ -446,19 +546,27 @@ export function PickRow({
             width: 34,
             height: 34,
             borderRadius: 17,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: (iconColor ?? colors.accent) + '22',
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: (iconColor ?? colors.accent) + "22",
           }}
         >
-          <Ionicons name={safeIcon(String(icon))} size={17} color={iconColor ?? colors.accent} />
+          <Ionicons
+            name={safeIcon(String(icon))}
+            size={17}
+            color={iconColor ?? colors.accent}
+          />
         </View>
       ) : null}
-      <Text style={{ flex: 1, color: colors.text, fontSize: 15, fontWeight: '500' }}>{label}</Text>
+      <Text
+        style={{ flex: 1, color: colors.text, fontSize: 15, fontWeight: "500" }}
+      >
+        {label}
+      </Text>
       {right ??
         (selected !== undefined ? (
           <Ionicons
-            name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+            name={selected ? "checkmark-circle" : "ellipse-outline"}
             size={22}
             color={selected ? colors.accent : colors.border}
           />
@@ -480,7 +588,7 @@ export function Select<T extends string | number>({
   value,
   options,
   onChange,
-  placeholder = 'Seleccionar…',
+  placeholder = "Seleccionar…",
   sheetTitle,
 }: {
   label?: string;
@@ -503,8 +611,8 @@ export function Select<T extends string | number>({
           setOpen(true);
         }}
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
+          flexDirection: "row",
+          alignItems: "center",
           gap: 10,
           borderWidth: 1,
           borderColor: colors.border,
@@ -520,22 +628,46 @@ export function Select<T extends string | number>({
               width: 26,
               height: 26,
               borderRadius: 13,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: (current.color ?? colors.accent) + '22',
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: (current.color ?? colors.accent) + "22",
             }}
           >
-            <Ionicons name={safeIcon(String(current.icon ?? 'ellipse'))} size={14} color={current.color ?? colors.accent} />
+            <Ionicons
+              name={safeIcon(String(current.icon ?? "ellipse"))}
+              size={14}
+              color={current.color ?? colors.accent}
+            />
           </View>
         ) : null}
-        <Text style={{ flex: 1, color: current ? colors.text : colors.textMuted, fontSize: 15, fontWeight: current ? '600' : '400' }} numberOfLines={1}>
+        <Text
+          style={{
+            flex: 1,
+            color: current ? colors.text : colors.textMuted,
+            fontSize: 15,
+            fontWeight: current ? "600" : "400",
+          }}
+          numberOfLines={1}
+        >
           {current ? current.label : placeholder}
         </Text>
         <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
       </Pressable>
 
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }} onPress={() => setOpen(false)}>
+      <Modal
+        visible={open}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOpen(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: colors.overlay,
+            justifyContent: "flex-end",
+          }}
+          onPress={() => setOpen(false)}
+        >
           <Pressable
             style={{
               backgroundColor: colors.surface,
@@ -543,17 +675,37 @@ export function Select<T extends string | number>({
               borderTopRightRadius: 20,
               paddingTop: 8,
               paddingBottom: 28,
-              maxHeight: '75%',
+              maxHeight: "75%",
             }}
             onPress={(e) => e.stopPropagation()}
           >
-            <View style={{ alignItems: 'center', paddingVertical: 8 }}>
-              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+            <View style={{ alignItems: "center", paddingVertical: 8 }}>
+              <View
+                style={{
+                  width: 36,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: colors.border,
+                }}
+              />
             </View>
-            <Text style={{ color: colors.text, fontWeight: '800', fontSize: 16, paddingHorizontal: 20, paddingBottom: 8 }}>
-              {sheetTitle ?? label ?? 'Seleccionar'}
+            <Text
+              style={{
+                color: colors.text,
+                fontWeight: "800",
+                fontSize: 16,
+                paddingHorizontal: 20,
+                paddingBottom: 8,
+              }}
+            >
+              {sheetTitle ?? label ?? "Seleccionar"}
             </Text>
-            <ScrollView contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 8 }}>
+            <ScrollView
+              contentContainerStyle={{
+                paddingHorizontal: 12,
+                paddingBottom: 8,
+              }}
+            >
               {options.map((o) => {
                 const sel = o.value === value;
                 return (
@@ -565,13 +717,15 @@ export function Select<T extends string | number>({
                     }}
                     style={({ pressed }) => [
                       {
-                        flexDirection: 'row',
-                        alignItems: 'center',
+                        flexDirection: "row",
+                        alignItems: "center",
                         gap: 12,
                         paddingVertical: 12,
                         paddingHorizontal: 8,
                         borderRadius: radius.md,
-                        backgroundColor: sel ? colors.accent + '18' : 'transparent',
+                        backgroundColor: sel
+                          ? colors.accent + "18"
+                          : "transparent",
                       },
                       pressed && { opacity: 0.6 },
                     ]}
@@ -582,24 +736,61 @@ export function Select<T extends string | number>({
                           width: 32,
                           height: 32,
                           borderRadius: 16,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: (o.color ?? colors.accent) + '22',
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: (o.color ?? colors.accent) + "22",
                         }}
                       >
-                        <Ionicons name={safeIcon(String(o.icon ?? 'ellipse'))} size={16} color={o.color ?? colors.accent} />
+                        <Ionicons
+                          name={safeIcon(String(o.icon ?? "ellipse"))}
+                          size={16}
+                          color={o.color ?? colors.accent}
+                        />
                       </View>
                     ) : null}
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: colors.text, fontSize: 15, fontWeight: sel ? '700' : '500' }}>{o.label}</Text>
-                      {o.sublabel ? <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 1 }}>{o.sublabel}</Text> : null}
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontSize: 15,
+                          fontWeight: sel ? "700" : "500",
+                        }}
+                      >
+                        {o.label}
+                      </Text>
+                      {o.sublabel ? (
+                        <Text
+                          style={{
+                            color: colors.textMuted,
+                            fontSize: 12,
+                            marginTop: 1,
+                          }}
+                        >
+                          {o.sublabel}
+                        </Text>
+                      ) : null}
                     </View>
-                    {sel ? <Ionicons name="checkmark" size={20} color={colors.accent} /> : null}
+                    {sel ? (
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color={colors.accent}
+                      />
+                    ) : null}
                   </Pressable>
                 );
               })}
               {options.length === 0 ? (
-                <Text style={{ color: colors.textMuted, fontSize: 14, padding: 16, textAlign: 'center' }}>Sin opciones</Text>
+                <Text
+                  style={{
+                    color: colors.textMuted,
+                    fontSize: 14,
+                    padding: 16,
+                    textAlign: "center",
+                  }}
+                >
+                  Sin opciones
+                </Text>
               ) : null}
             </ScrollView>
           </Pressable>
@@ -624,11 +815,24 @@ export function Toggle({
 }) {
   const { colors } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 }}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 10,
+      }}
+    >
       {icon ? <Ionicons name={icon} size={20} color={colors.accent} /> : null}
       <View style={{ flex: 1 }}>
-        <Text style={{ color: colors.text, fontSize: 15, fontWeight: '500' }}>{label}</Text>
-        {hint ? <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 1 }}>{hint}</Text> : null}
+        <Text style={{ color: colors.text, fontSize: 15, fontWeight: "500" }}>
+          {label}
+        </Text>
+        {hint ? (
+          <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 1 }}>
+            {hint}
+          </Text>
+        ) : null}
       </View>
       <Switch
         value={value}
@@ -642,7 +846,15 @@ export function Toggle({
 
 export function Divider() {
   const { colors } = useTheme();
-  return <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginVertical: 4 }} />;
+  return (
+    <View
+      style={{
+        height: StyleSheet.hairlineWidth,
+        backgroundColor: colors.border,
+        marginVertical: 4,
+      }}
+    />
+  );
 }
 
 export function ColorPicker({
@@ -655,7 +867,7 @@ export function ColorPicker({
   colors?: string[];
 }) {
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
       {swatches.map((c) => (
         <Pressable
           key={c}
@@ -666,9 +878,9 @@ export function ColorPicker({
             borderRadius: 17,
             backgroundColor: c,
             borderWidth: value.toLowerCase() === c.toLowerCase() ? 3 : 0,
-            borderColor: '#FFF',
-            alignItems: 'center',
-            justifyContent: 'center',
+            borderColor: "#FFF",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           {value.toLowerCase() === c.toLowerCase() ? (
@@ -693,7 +905,7 @@ export function IconPicker({
 }) {
   const { colors } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
       {icons.map((ic) => {
         const active = ic === value;
         return (
@@ -704,14 +916,18 @@ export function IconPicker({
               width: 42,
               height: 42,
               borderRadius: 12,
-              alignItems: 'center',
-              justifyContent: 'center',
+              alignItems: "center",
+              justifyContent: "center",
               backgroundColor: active ? color : colors.surfaceAlt,
               borderWidth: 1,
               borderColor: active ? color : colors.border,
             }}
           >
-            <Ionicons name={ic} size={19} color={active ? '#FFF' : colors.textMuted} />
+            <Ionicons
+              name={ic}
+              size={19}
+              color={active ? "#FFF" : colors.textMuted}
+            />
           </Pressable>
         );
       })}
@@ -724,57 +940,91 @@ export function ProgressBar({ pct, color }: { pct: number; color?: string }) {
   const clamped = Math.max(0, Math.min(1, pct));
   const over = pct > 1;
   return (
-    <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.surfaceAlt, overflow: 'hidden' }}>
+    <View
+      style={{
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: colors.surfaceAlt,
+        overflow: "hidden",
+      }}
+    >
       <View
         style={{
-          height: '100%',
+          height: "100%",
           width: `${clamped * 100}%`,
           borderRadius: 4,
-          backgroundColor: over ? colors.negative : color ?? colors.accent,
+          backgroundColor: over ? colors.negative : (color ?? colors.accent),
         }}
       />
     </View>
   );
 }
 
-export function StatusBadge({ label, color, icon }: { label: string; color: string; icon?: IconName }) {
+export function StatusBadge({
+  label,
+  color,
+  icon,
+}: {
+  label: string;
+  color: string;
+  icon?: IconName;
+}) {
   return (
     <View
       style={{
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: "row",
+        alignItems: "center",
         gap: 4,
         paddingVertical: 3,
         paddingHorizontal: 8,
         borderRadius: 999,
-        backgroundColor: color + '22',
+        backgroundColor: color + "22",
       }}
     >
       {icon ? <Ionicons name={icon} size={11} color={color} /> : null}
-      <Text style={{ color, fontSize: 11, fontWeight: '700' }}>{label}</Text>
+      <Text style={{ color, fontSize: 11, fontWeight: "700" }}>{label}</Text>
     </View>
   );
 }
 
-export function EmptyState({ icon, title, subtitle }: { icon: IconName; title: string; subtitle?: string }) {
+export function EmptyState({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon: IconName;
+  title: string;
+  subtitle?: string;
+}) {
   const { colors } = useTheme();
   return (
-    <View style={{ alignItems: 'center', paddingVertical: 48, gap: 8 }}>
+    <View style={{ alignItems: "center", paddingVertical: 48, gap: 8 }}>
       <View
         style={{
           width: 64,
           height: 64,
           borderRadius: 32,
-          alignItems: 'center',
-          justifyContent: 'center',
+          alignItems: "center",
+          justifyContent: "center",
           backgroundColor: colors.surfaceAlt,
         }}
       >
         <Ionicons name={icon} size={28} color={colors.textMuted} />
       </View>
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>{title}</Text>
+      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>
+        {title}
+      </Text>
       {subtitle ? (
-        <Text style={{ color: colors.textMuted, fontSize: 13, textAlign: 'center', maxWidth: 260 }}>{subtitle}</Text>
+        <Text
+          style={{
+            color: colors.textMuted,
+            fontSize: 13,
+            textAlign: "center",
+            maxWidth: 260,
+          }}
+        >
+          {subtitle}
+        </Text>
       ) : null}
     </View>
   );
@@ -782,7 +1032,7 @@ export function EmptyState({ icon, title, subtitle }: { icon: IconName; title: s
 
 export function Money({
   value,
-  currency = 'COP',
+  currency = "COP",
   hide = false,
   style,
   colored = false,
@@ -794,49 +1044,14 @@ export function Money({
   colored?: boolean;
 }) {
   const { colors } = useTheme();
-  const color = colored ? (value < 0 ? colors.negative : colors.positive) : colors.text;
-  return <Text style={[{ color, fontWeight: '700' }, style]}>{formatMoney(value, currency, hide)}</Text>;
-}
-
-/**
- * Envuelve contenido Premium. Si el usuario no es Premium, muestra el contenido
- * desenfocado (BlurView) + un bloque bloqueado con botón para ir a la pantalla de compra.
- */
-export function PremiumGate({
-  feature,
-  children,
-}: {
-  feature: string;
-  children: React.ReactNode;
-}) {
-  const { colors } = useTheme();
-  const { isPremium } = useApp();
-  if (isPremium) return <>{children}</>;
+  const color = colored
+    ? value < 0
+      ? colors.negative
+      : colors.positive
+    : colors.text;
   return (
-    <View style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
-      <View style={{ pointerEvents: 'none' as never }}>
-        <View style={{ opacity: 0.85 }}>{children}</View>
-        <BlurView intensity={32} tint="systemUltraThinMaterial" style={StyleSheet.absoluteFill} />
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg + '99' }]} />
-      </View>
-      <View style={{ alignItems: 'center', padding: 20, gap: 6, backgroundColor: colors.surfaceAlt }}>
-        <Ionicons name="lock-closed" size={22} color={colors.accent} />
-        <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }}>Función Premium</Text>
-        <Text style={{ color: colors.textMuted, fontSize: 12, textAlign: 'center', maxWidth: 260 }}>
-          {feature} está disponible con Cajita Premium.
-        </Text>
-        <Pressable
-          onPress={() => router.push('/premium' as never)}
-          style={({ pressed }) => [
-            {
-              marginTop: 8, backgroundColor: colors.accent, paddingVertical: 10, paddingHorizontal: 22, borderRadius: 999,
-              opacity: pressed ? 0.8 : 1,
-            },
-          ]}
-        >
-          <Text style={{ color: colors.onAccent, fontWeight: '700', fontSize: 14 }}>Ver Premium</Text>
-        </Pressable>
-      </View>
-    </View>
+    <Text style={[{ color, fontWeight: "700" }, style]}>
+      {formatMoney(value, currency, hide)}
+    </Text>
   );
 }

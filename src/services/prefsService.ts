@@ -1,9 +1,9 @@
-import { getDb } from '../db/database';
+import { getDb } from "../db/database";
 
 export interface Prefs {
   userName: string;
   accentKey: string;
-  themeMode: 'system' | 'light' | 'dark';
+  themeMode: "system" | "light" | "dark";
   hideBalances: boolean;
   monthStartDay: number;
   currency: string;
@@ -11,24 +11,22 @@ export interface Prefs {
   notificationsEnabled: boolean;
   defaultLeadDays: number;
   appLockEnabled: boolean;
-  premium: boolean;
 }
 
 const DEFAULTS: Prefs = {
-  userName: '',
-  accentKey: 'green',
-  themeMode: 'system',
+  userName: "",
+  accentKey: "green",
+  themeMode: "system",
   hideBalances: false,
   monthStartDay: 1,
-  currency: 'COP',
+  currency: "COP",
   onboarded: false,
   notificationsEnabled: true,
   defaultLeadDays: 3,
   appLockEnabled: false,
-  premium: false,
 };
 
-const PREFIX = 'pref:';
+const PREFIX = "pref:";
 
 export function getPrefs(): Prefs {
   const db = getDb();
@@ -40,8 +38,9 @@ export function getPrefs(): Prefs {
     const k = r.key.slice(PREFIX.length) as keyof Prefs;
     if (!(k in DEFAULTS)) continue;
     const def = DEFAULTS[k];
-    if (typeof def === 'boolean') (out[k] as boolean) = r.value === '1';
-    else if (typeof def === 'number') (out[k] as number) = Number(r.value) || def;
+    if (typeof def === "boolean") (out[k] as boolean) = r.value === "1";
+    else if (typeof def === "number")
+      (out[k] as number) = Number(r.value) || def;
     else (out[k] as string) = r.value;
   }
   return out;
@@ -49,7 +48,7 @@ export function getPrefs(): Prefs {
 
 export function setPref<K extends keyof Prefs>(key: K, value: Prefs[K]): void {
   const db = getDb();
-  const v = typeof value === 'boolean' ? (value ? '1' : '0') : String(value);
+  const v = typeof value === "boolean" ? (value ? "1" : "0") : String(value);
   db.runSync(
     `INSERT INTO sync_metadata (key, value) VALUES (?, ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`,

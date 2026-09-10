@@ -1,17 +1,33 @@
-import React, { createContext, useContext, useCallback, useMemo, useState } from 'react';
-import { getAccounts } from '@/src/services/accountService';
-import { getCategories, seedDefaultCategories } from '@/src/services/categoryService';
-import { getLoans } from '@/src/services/loanService';
-import { getPeople } from '@/src/services/personService';
-import { getTransactions } from '@/src/services/transactionService';
-import { getBudgets } from '@/src/services/budgetService';
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
+import { getAccounts } from "@/src/services/accountService";
 import {
-  runDueRecurring, getSubscriptions, getFixedForMonth,
-  fixedMonthlySummary, FixedMonthlySummary,
-} from '@/src/services/recurringService';
-import { activeWithdrawals, lastMonthLeftover, WithdrawalView } from '@/src/services/cashService';
-import { loanBalance as loanBalanceOf } from '@/src/services/loanService';
-import { syncSubscriptionNotifications } from '@/src/services/notificationService';
+  getCategories,
+  seedDefaultCategories,
+} from "@/src/services/categoryService";
+import { getLoans } from "@/src/services/loanService";
+import { getPeople } from "@/src/services/personService";
+import { getTransactions } from "@/src/services/transactionService";
+import { getBudgets } from "@/src/services/budgetService";
+import {
+  runDueRecurring,
+  getSubscriptions,
+  getFixedForMonth,
+  fixedMonthlySummary,
+  FixedMonthlySummary,
+} from "@/src/services/recurringService";
+import {
+  activeWithdrawals,
+  lastMonthLeftover,
+  WithdrawalView,
+} from "@/src/services/cashService";
+import { loanBalance as loanBalanceOf } from "@/src/services/loanService";
+import { syncSubscriptionNotifications } from "@/src/services/notificationService";
 import {
   accountBalance,
   getDb,
@@ -22,10 +38,9 @@ import {
   Transaction,
   Budget,
   Person,
-} from '@/src/db/database';
-import { getPrefs } from '@/src/services/prefsService';
-import { initPremium, restorePremium } from '@/src/services/premiumService';
-import { safeIcon } from '@/src/theme';
+} from "@/src/db/database";
+import { getPrefs } from "@/src/services/prefsService";
+import { safeIcon } from "@/src/theme";
 
 interface AppState {
   accounts: Account[];
@@ -49,8 +64,11 @@ interface AppState {
     debtPaidThisMonth: number;
   };
   fixed: FixedMonthlySummary;
-  cash: { active: WithdrawalView[]; totalRemaining: number; lastMonthLeftover: number };
-  isPremium: boolean;
+  cash: {
+    active: WithdrawalView[];
+    totalRemaining: number;
+    lastMonthLeftover: number;
+  };
   refresh: () => void;
 }
 
@@ -64,7 +82,7 @@ const MONTHLY_FACTOR: Record<string, number> = {
 
 const AppContext = createContext<AppState | null>(null);
 
-const DEBT_TYPES = ['credit_card', 'debt', 'loan'];
+const DEBT_TYPES = ["credit_card", "debt", "loan"];
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [tick, setTick] = useState(0);
@@ -83,7 +101,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     for (const a of accounts) {
       const b = accountBalance(a.id);
       balances[a.id] = b;
-      if (!a.excludeFromTotals && !DEBT_TYPES.includes(a.type)) totalAssets += b;
+      if (!a.excludeFromTotals && !DEBT_TYPES.includes(a.type))
+        totalAssets += b;
     }
 
     const prefs = getPrefs();
@@ -107,36 +126,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let owedToMe = 0;
     for (const l of loans) {
       const bal = Math.abs(loanBalanceOf(l.id));
-      if (l.type === 'lent') owedToMe += bal;
-      else if (l.counterpartyKind === 'person') debtPeople += bal;
+      if (l.type === "lent") owedToMe += bal;
+      else if (l.counterpartyKind === "person") debtPeople += bal;
       else debtEntities += bal;
     }
     // Tarjetas de crédito y cuentas de deuda cuentan como deuda con entidades.
     for (const a of accounts) {
-      if (!a.excludeFromTotals && ['credit_card', 'debt', 'loan'].includes(a.type)) {
+      if (
+        !a.excludeFromTotals &&
+        ["credit_card", "debt", "loan"].includes(a.type)
+      ) {
         debtEntities += Math.abs(balances[a.id] ?? 0);
       }
     }
 
     // Pagado a créditos / deudas este mes: cuotas de préstamos (gasto con loanId) +
     // pagos/abonos que entran a cuentas de deuda o tarjetas (transferencia positiva).
-    const debtAccountIds = accounts.filter((a) => ['credit_card', 'debt', 'loan'].includes(a.type)).map((a) => a.id);
+    const debtAccountIds = accounts
+      .filter((a) => ["credit_card", "debt", "loan"].includes(a.type))
+      .map((a) => a.id);
     let debtPaidThisMonth = 0;
     {
-      const loanPay = getDb().getFirstSync<{ s: number }>(
-        `SELECT COALESCE(SUM(ABS(amount)),0) AS s FROM transactions
+      const loanPay =
+        getDb().getFirstSync<{ s: number }>(
+          `SELECT COALESCE(SUM(ABS(amount)),0) AS s FROM transactions
          WHERE deletedAt IS NULL AND type='expense' AND loanId IS NOT NULL AND date BETWEEN ? AND ?`,
-        [from, to],
-      )?.s ?? 0;
+          [from, to],
+        )?.s ?? 0;
       let cardPay = 0;
       if (debtAccountIds.length) {
-        const ph = debtAccountIds.map(() => '?').join(',');
-        cardPay = getDb().getFirstSync<{ s: number }>(
-          `SELECT COALESCE(SUM(amount),0) AS s FROM transactions
+        const ph = debtAccountIds.map(() => "?").join(",");
+        cardPay =
+          getDb().getFirstSync<{ s: number }>(
+            `SELECT COALESCE(SUM(amount),0) AS s FROM transactions
            WHERE deletedAt IS NULL AND type='transfer' AND amount > 0
              AND accountId IN (${ph}) AND date BETWEEN ? AND ?`,
-          [...debtAccountIds, from, to],
-        )?.s ?? 0;
+            [...debtAccountIds, from, to],
+          )?.s ?? 0;
       }
       debtPaidThisMonth = loanPay + cardPay;
     }
@@ -144,7 +170,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let subscriptionsMonthly = 0;
     try {
       for (const r of getSubscriptions()) {
-        if (r.type !== 'expense') continue;
+        if (r.type !== "expense") continue;
         subscriptionsMonthly += r.amount * (MONTHLY_FACTOR[r.frequency] ?? 1);
       }
     } catch {
@@ -155,10 +181,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       fixed = fixedMonthlySummary();
     } catch {
-      fixed = { periodKey: '', items: [], total: 0, paidTotal: 0, pendingTotal: 0, paidCount: 0, pendingCount: 0, overdueCount: 0 };
+      fixed = {
+        periodKey: "",
+        items: [],
+        total: 0,
+        paidTotal: 0,
+        pendingTotal: 0,
+        paidCount: 0,
+        pendingCount: 0,
+        overdueCount: 0,
+      };
     }
 
-    let cash: AppState['cash'];
+    let cash: AppState["cash"];
     try {
       const active = activeWithdrawals();
       cash = {
@@ -185,10 +220,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       netWorth: totalAssets + owedToMe - totalDebt,
       primaryAccountId,
       month: { income, expense, net: income - expense, transfers },
-      summary: { debtEntities, debtPeople, owedToMe, subscriptionsMonthly, fixedMonthly: fixed.total, debtPaidThisMonth },
+      summary: {
+        debtEntities,
+        debtPeople,
+        owedToMe,
+        subscriptionsMonthly,
+        fixedMonthly: fixed.total,
+        debtPaidThisMonth,
+      },
       fixed,
       cash,
-      isPremium: getPrefs().premium,
       refresh,
     };
   }, [tick, refresh]);
@@ -198,7 +239,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
 export function useApp(): AppState {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useApp must be used within AppProvider');
+  if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 }
 
@@ -207,18 +248,28 @@ export function bootstrap(): void {
   seedDefaultCategories();
   // Migración de iconos: sanitiza los iconos viejos/inválidos guardados en la BD
   try {
-    const cats = db.getAllSync<{ id: number; icon: string }>('SELECT id, icon FROM categories WHERE deletedAt IS NULL');
+    const cats = db.getAllSync<{ id: number; icon: string }>(
+      "SELECT id, icon FROM categories WHERE deletedAt IS NULL",
+    );
     for (const c of cats) {
       const safe = safeIcon(c.icon);
       if (safe !== c.icon) {
-        db.runSync(`UPDATE categories SET icon = ?, syncState = 'pending' WHERE id = ?`, [safe, c.id]);
+        db.runSync(
+          `UPDATE categories SET icon = ?, syncState = 'pending' WHERE id = ?`,
+          [safe, c.id],
+        );
       }
     }
-    const accts = db.getAllSync<{ id: number; icon: string }>('SELECT id, icon FROM accounts WHERE deletedAt IS NULL');
+    const accts = db.getAllSync<{ id: number; icon: string }>(
+      "SELECT id, icon FROM accounts WHERE deletedAt IS NULL",
+    );
     for (const a of accts) {
       const safe = safeIcon(a.icon);
       if (safe !== a.icon) {
-        db.runSync(`UPDATE accounts SET icon = ?, syncState = 'pending' WHERE id = ?`, [safe, a.id]);
+        db.runSync(
+          `UPDATE accounts SET icon = ?, syncState = 'pending' WHERE id = ?`,
+          [safe, a.id],
+        );
       }
     }
   } catch {
@@ -237,7 +288,4 @@ export function bootstrap(): void {
   }
   // Reprograma las notificaciones locales de suscripciones (async, sin bloquear el arranque).
   void syncSubscriptionNotifications();
-  // Conecta los listeners de compra de Premium y restaura compras previas.
-  initPremium();
-  void restorePremium();
 }

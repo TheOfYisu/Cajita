@@ -1,10 +1,14 @@
-import React from 'react';
-import { View } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import { getDb, setDbKey } from '../db/database';
-import { ensureDbKey, ensureFreshEncryptedDb } from '../db/encryption';
-import { bootstrap } from '../store/appStore';
-import { initCloudBackup, restoreCloudBackupIfNeeded, backupNow } from '../services/cloudBackupService';
+import React from "react";
+import { View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import { getDb, setDbKey } from "../db/database";
+import { ensureDbKey, ensureFreshEncryptedDb } from "../db/encryption";
+import { bootstrap } from "../store/appStore";
+import {
+  initCloudBackup,
+  restoreCloudBackupIfNeeded,
+  backupNow,
+} from "../services/cloudBackupService";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -34,8 +38,7 @@ export function DbGate({ children }: { children: React.ReactNode }) {
         } catch {
           /* bootstrap no debe bloquear el arranque */
         }
-        // Conecta el backup automático (solo si es Premium). Va DESPUÉS de bootstrap()
-        // para que restorePremium() ya haya cargado el estado de compra.
+        // Conecta el backup automático después del bootstrap.
         try {
           initCloudBackup();
         } catch {
@@ -58,7 +61,7 @@ export function DbGate({ children }: { children: React.ReactNode }) {
 
   if (error) {
     // Pantalla mínima sin theme (aún no montado). Color del splash de app.json.
-    return <View style={{ flex: 1, backgroundColor: '#2E9E6B' }} />;
+    return <View style={{ flex: 1, backgroundColor: "#2E9E6B" }} />;
   }
   if (!ready) return null; // splash nativo visible
 

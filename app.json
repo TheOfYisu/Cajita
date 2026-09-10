@@ -2,7 +2,7 @@
   "expo": {
     "name": "Cajita",
     "slug": "cajita",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -11,13 +11,13 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2E9E6B"
+      "backgroundColor": "#123F36"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cajita.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false,
+        "ITSAppUsesNonExemptEncryption": true,
         "NSUbiquitousContainers": {
           "iCloud.com.cajita.app": {
             "NSUbiquitousContainerIsDocumentScopePublic": true,
@@ -32,7 +32,7 @@
       "package": "com.cajita.app",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#123F36",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -66,7 +66,7 @@
       [
         "expo-notifications",
         {
-          "color": "#2E9E6B"
+          "color": "#278A68"
         }
       ],
       "expo-font",
