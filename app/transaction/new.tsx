@@ -26,7 +26,7 @@ export default function NewTransactionScreen() {
   const [accountId, setAccountId] = React.useState<number | null>(null);
   const [toAccountId, setToAccountId] = React.useState<number | null>(null);
   const [categoryId, setCategoryId] = React.useState<number | null>(null);
-  const [date, setDate] = React.useState<number>(Date.now());
+  const [date, setDate] = React.useState<number>(() => Date.now());
 
   const creditCards = accounts.filter((a) => a.type === 'credit_card');
   const fundAccounts = accounts.filter((a) => !['credit_card', 'debt', 'loan'].includes(a.type));

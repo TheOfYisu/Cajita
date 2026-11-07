@@ -168,6 +168,12 @@ export default function SettingsScreen() {
           onPress: () => router.push("/settings/recurring"),
         },
         {
+          icon: "flash",
+          label: "Acciones y Atajos de iOS",
+          hint: "Botón de Acción · Doble toque atrás · Siri · Quick Actions",
+          onPress: () => router.push("/settings/shortcuts"),
+        },
+        {
           icon: "notifications",
           label: "Notificaciones",
           hint: prefs.notificationsEnabled

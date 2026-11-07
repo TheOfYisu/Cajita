@@ -33,6 +33,7 @@ TypeScript React Native Expo SQLCipher CloudKit Bundle
 - **Exportación**: movimientos (CSV) y backup completo (JSON)
 - **Dark / Light mode**: tema claro, oscuro y automático, con 10 colores de acento
 - **Bloqueo con biometría**: Face ID / Touch ID / huella al abrir y al volver de segundo plano
+- **Atajos nativos de iOS (`AppIntents` & Quick Actions)**: integración con el **Botón de Acción**, **Doble/Triple Toque Atrás (Back Tap)**, **Siri**, **app Atajos** y menú rápido al mantener presionado el icono
 
 ---
 
@@ -40,11 +41,12 @@ TypeScript React Native Expo SQLCipher CloudKit Bundle
 
 | Layer         | Technology                                                   |
 | ------------- | ------------------------------------------------------------ |
-| Framework     | React Native + Expo SDK 57                                   |
-| Language      | TypeScript (estricto)                                        |
+| Framework     | React Native 0.88 + Expo SDK 58                              |
+| Language      | TypeScript (estricto) + Swift (módulos nativos iOS)          |
 | Navigation    | expo-router                                                  |
 | Database      | expo-sqlite + **SQLCipher** (SQLite cifrado AES-256)         |
 | Sync / Backup | CloudKit / iCloud (`NSUbiquitousContainers` + módulo nativo) |
+| iOS Actions   | Apple `AppIntents` (`AppShortcutsProvider`) + Quick Actions  |
 | Security      | expo-local-authentication · expo-secure-store · expo-crypto  |
 | Notifications | expo-notifications (recordatorios locales)                   |
 | Charts        | SVG/gráficos propios (`Charts.tsx`)                          |
@@ -225,6 +227,7 @@ Desarrollado con
 
 OpenCode · DeepSeek V4 Pro
 Claude Code · Sonnet 5
+Google Antigravity · Gemini
 
 ---
 

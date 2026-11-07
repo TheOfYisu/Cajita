@@ -10,9 +10,70 @@ import ExpoModulesCore
  */
 public class CajitaCloudSyncModule: Module {
   private let containerId = "iCloud.com.cajita.app"
+  private static let pendingRouteKey = "cajita.pendingShortcutRoute"
+  private static let catalogKey = "cajita.shortcutCatalog"
+  private static let pendingTxQueueKey = "cajita.pendingTransactionsQueue"
+  private var shortcutObserver: NSObjectProtocol?
+  private var txObserver: NSObjectProtocol?
 
   public func definition() -> ModuleDefinition {
     Name("CajitaCloudSync")
+
+    Events("onShortcutRoute", "onBackgroundTransactions")
+
+    OnStartObserving {
+      self.shortcutObserver = NotificationCenter.default.addObserver(
+        forName: Notification.Name("CajitaShortcutTriggered"),
+        object: nil,
+        queue: .main
+      ) { [weak self] notification in
+        if let route = notification.userInfo?["route"] as? String {
+          UserDefaults.standard.removeObject(forKey: Self.pendingRouteKey)
+          self?.sendEvent("onShortcutRoute", ["route": route])
+        }
+      }
+      self.txObserver = NotificationCenter.default.addObserver(
+        forName: Notification.Name("CajitaBackgroundTransaction"),
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        self?.sendEvent("onBackgroundTransactions", [:])
+      }
+    }
+
+    OnStopObserving {
+      if let observer = self.shortcutObserver {
+        NotificationCenter.default.removeObserver(observer)
+        self.shortcutObserver = nil
+      }
+      if let txObs = self.txObserver {
+        NotificationCenter.default.removeObserver(txObs)
+        self.txObserver = nil
+      }
+    }
+
+    // Consume la ruta pendiente de un Quick Action del icono.
+    Function("consumePendingShortcutRoute") { () -> String? in
+      guard let route = UserDefaults.standard.string(forKey: Self.pendingRouteKey) else {
+        return nil
+      }
+      UserDefaults.standard.removeObject(forKey: Self.pendingRouteKey)
+      return route
+    }
+
+    // Sincroniza el catálogo de cuentas y categorías para que AppIntents lo muestre sin abrir la app.
+    Function("syncShortcutCatalog") { (jsonString: String) in
+      UserDefaults.standard.set(jsonString, forKey: Self.catalogKey)
+    }
+
+    // Consume la cola de movimientos creados en segundo plano desde el Atajo (sin abrir la app).
+    Function("consumePendingShortcutTransactions") { () -> String? in
+      guard let raw = UserDefaults.standard.string(forKey: Self.pendingTxQueueKey) else {
+        return nil
+      }
+      UserDefaults.standard.removeObject(forKey: Self.pendingTxQueueKey)
+      return raw
+    }
 
     // ¿Hay sesión de iCloud activa en este dispositivo?
     Function("isCloudAvailable") {

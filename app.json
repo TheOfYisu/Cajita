@@ -2,7 +2,7 @@
   "expo": {
     "name": "Cajita",
     "slug": "cajita",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cajita.app",
-      "buildNumber": "3",
+      "buildNumber": "4",
+      "appleTeamId": "254TTZ2VC5",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSFaceIDUsageDescription": "Cajita usa Face ID únicamente en tu dispositivo para desbloquear la app y proteger tus datos financieros locales.",
@@ -26,7 +27,33 @@
             "NSUbiquitousContainerSupportedFolderLevels": "Any",
             "NSUbiquitousContainerName": "Cajita"
           }
-        }
+        },
+        "UIApplicationShortcutItems": [
+          {
+            "UIApplicationShortcutItemType": "com.cajita.app.new-expense",
+            "UIApplicationShortcutItemTitle": "Registrar gasto",
+            "UIApplicationShortcutItemSubtitle": "Anotar un gasto rápido",
+            "UIApplicationShortcutItemIconSymbolName": "arrow.down.circle.fill"
+          },
+          {
+            "UIApplicationShortcutItemType": "com.cajita.app.new-income",
+            "UIApplicationShortcutItemTitle": "Registrar ingreso",
+            "UIApplicationShortcutItemSubtitle": "Anotar un ingreso",
+            "UIApplicationShortcutItemIconSymbolName": "arrow.up.circle.fill"
+          },
+          {
+            "UIApplicationShortcutItemType": "com.cajita.app.new-transfer",
+            "UIApplicationShortcutItemTitle": "Transferencia",
+            "UIApplicationShortcutItemSubtitle": "Mover dinero entre cuentas",
+            "UIApplicationShortcutItemIconSymbolName": "arrow.left.arrow.right.circle.fill"
+          },
+          {
+            "UIApplicationShortcutItemType": "com.cajita.app.cash",
+            "UIApplicationShortcutItemTitle": "Mi efectivo",
+            "UIApplicationShortcutItemSubtitle": "Billetes y monedas",
+            "UIApplicationShortcutItemIconSymbolName": "banknote.fill"
+          }
+        ]
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,

@@ -1,3 +1,4 @@
+import React from "react";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -8,9 +9,16 @@ import { ThemeProvider, useTheme } from "@/src/theme/ThemeProvider";
 import { navTheme } from "@/src/theme";
 import { AppLockGate } from "@/src/components/AppLockGate";
 import { DbGate } from "@/src/components/DbGate";
+import { useIosShortcutsListener } from "@/src/services/iosShortcutsService";
 
 function Navigator() {
   const { colors, dark } = useTheme();
+  const { setupListeners } = useIosShortcutsListener();
+
+  React.useEffect(() => {
+    return setupListeners();
+  }, [setupListeners]);
+
   return (
     <NavThemeProvider value={navTheme(colors.accent, dark)}>
       <StatusBar style={dark ? "light" : "dark"} />
@@ -103,6 +111,14 @@ function Navigator() {
           />
           <Stack.Screen
             name="settings/privacy"
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="settings/shortcuts"
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="quick-action"
             options={{ presentation: "modal" }}
           />
         </Stack>
