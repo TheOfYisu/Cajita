@@ -74,12 +74,12 @@ export default function SecurityScreen() {
         </View>
         <Text style={{ color: colors.textMuted, fontSize: 13, lineHeight: 19 }}>
           La base de datos local está cifrada con SQLCipher (AES-256). La clave vive en el
-          llavero seguro del teléfono, así que el archivo es ilegible fuera de la app aunque
-          extraigan el dispositivo.{'\n\n'}
-          El <Text style={{ fontWeight: '700', color: colors.text }}>backup JSON</Text> que exportas
-          en Ajustes → Datos <Text style={{ fontWeight: '700', color: colors.text }}>no está cifrado</Text>:
-          guárdalo en un sitio seguro. Es también lo que necesitas para pasar tus datos a otro
-          teléfono (la clave de cifrado no se transfiere).
+          llavero seguro del teléfono (Keychain en iOS / Keystore en Android), así que el
+          archivo es ilegible fuera de la app aunque extraigan el dispositivo.{'\n\n'}
+          En iOS, el backup en iCloud sube el archivo cifrado a tu cuenta personal y la clave
+          viaja por tu iCloud Keychain. El <Text style={{ fontWeight: '700', color: colors.text }}>backup JSON</Text> que exportas
+          manualmente en Ajustes → Datos <Text style={{ fontWeight: '700', color: colors.text }}>no está cifrado</Text>:
+          guárdalo en un sitio seguro si lo usas para migrar tus datos a otro dispositivo.
         </Text>
       </Card>
     </ModalScreen>

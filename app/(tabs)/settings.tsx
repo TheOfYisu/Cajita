@@ -6,8 +6,10 @@ import {
   Alert,
   Pressable,
   Platform,
+  Linking,
 } from "react-native";
 import { Image } from "expo-image";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
@@ -181,6 +183,12 @@ export default function SettingsScreen() {
             : "Bloqueo con huella / Face ID",
           onPress: () => router.push("/settings/security"),
         },
+        {
+          icon: "shield-checkmark",
+          label: "Privacidad y datos",
+          hint: "Política local-first · Cifrado · Borrar datos",
+          onPress: () => router.push("/settings/privacy"),
+        },
       ],
     },
     {
@@ -204,7 +212,7 @@ export default function SettingsScreen() {
         ...(Platform.OS === "ios"
           ? [
               {
-                icon: "cloud-download",
+                icon: "cloud-download" as IconName,
                 label: "Restaurar desde iCloud",
                 hint: hasCloudBackup
                   ? "Reemplaza los datos con el backup guardado"
@@ -240,10 +248,22 @@ export default function SettingsScreen() {
       title: "Acerca de",
       items: [
         {
+          icon: "cafe",
+          label: "Invítame un café (Ko-fi)",
+          hint: "ko-fi.com/theofyisus · Apoyo voluntario, la app es 100 % gratis",
+          onPress: () => openExternalLink("https://ko-fi.com/theofyisus"),
+        },
+        {
+          icon: "document-lock",
+          label: "Política de privacidad",
+          hint: "100 % local · Sin servidores ni rastreadores",
+          onPress: () => router.push("/settings/privacy"),
+        },
+        {
           icon: "logo-github",
           label: "GitHub",
-          hint: "github.com/TheOfYisu",
-          onPress: () => openLink("https://github.com/TheOfYisu"),
+          hint: "github.com/TheOfYisu/Cajita",
+          onPress: () => openLink("https://github.com/TheOfYisu/Cajita"),
         },
         {
           icon: "logo-linkedin",
@@ -254,7 +274,7 @@ export default function SettingsScreen() {
         {
           icon: "code-slash",
           label: "Autor",
-          hint: "TheOfYisu",
+          hint: "Jesús Daniel Garizao Mejía (TheOfYisu)",
           onPress: () => openLink("https://github.com/TheOfYisu"),
         },
       ],
@@ -352,7 +372,7 @@ export default function SettingsScreen() {
         style={{ color: colors.textMuted, fontSize: 11, textAlign: "center" }}
         onPress={refresh}
       >
-        v1.0.5
+        v{Constants.expoConfig?.version ?? "1.0.9"}
       </Text>
     </Screen>
   );
@@ -360,6 +380,10 @@ export default function SettingsScreen() {
 
 function openLink(url: string) {
   void WebBrowser.openBrowserAsync(url);
+}
+
+function openExternalLink(url: string) {
+  void Linking.openURL(url);
 }
 
 function RowItem({

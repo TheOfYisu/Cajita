@@ -91,7 +91,7 @@ El desarrollo es en Windows, así que la compilación nativa corre en la nube.
 El repo trae `codemagic.yaml` con dos workflows (`ios-release`, `android-release`) que generan los proyectos nativos en CI con `npx expo prebuild`. Se disparan al crear un tag `v*`:
 
 ```bash
-git tag v1.0.8 && git push origin v1.0.8
+git tag v1.0.9 && git push origin v1.0.9
 ```
 
 **EAS Build (alternativa)**
@@ -171,7 +171,7 @@ app/
 ├── transaction/          # Crear / editar transacción
 ├── transfer/             # Transferencia entre cuentas
 ├── settings/             # Perfil, apariencia, categorías, personas, presupuestos,
-│                         # recurrentes, notificaciones, seguridad
+│                         # recurrentes, notificaciones, seguridad, privacidad y datos
 └── import.tsx            # Importación CSV
 src/
 ├── components/           # UI reutilizable (ui.tsx, Charts, AccountCard, DbGate, AppLockGate…)
@@ -185,8 +185,19 @@ src/
 └── theme/                # Paleta, iconos y ThemeProvider
 modules/                  # Módulo nativo CajitaCloudSync (iOS)
 plugins/                  # Config plugins (entitlements de iCloud, SQLCipher…)
+docs/                     # Política de privacidad web, Export Compliance y guía de despliegue en tiendas
+PRIVACY.md                # Política de Privacidad oficial (Español / English)
 codemagic.yaml            # CI/CD para iOS y Android
 ```
+
+---
+
+## 🔒 Privacidad y Publicación en Tiendas
+
+- **Política de Privacidad (Markdown):** [`PRIVACY.md`](./PRIVACY.md)
+- **Política de Privacidad (HTML para GitHub Pages / Tiendas):** [`docs/privacy-policy.html`](./docs/privacy-policy.html)
+- **Declaración de Encriptación (Apple Export Compliance):** [`docs/export-compliance-encryption.md`](./docs/export-compliance-encryption.md)
+- **Guía de Despliegue en App Store y Google Play:** [`docs/store-deployment-guide.md`](./docs/store-deployment-guide.md)
 
 ---
 
@@ -194,7 +205,17 @@ codemagic.yaml            # CI/CD para iOS y Android
 
 **Jesús Daniel Garizao Mejía**
 
-GitHub [TheOfYisu](https://github.com/TheOfYisu) · LinkedIn [jesudgm](https://www.linkedin.com/in/jesudgm/)
+GitHub [TheOfYisu](https://github.com/TheOfYisu) · LinkedIn [jesudgm](https://www.linkedin.com/in/jesudgm/) · Ko-fi [theofyisus](https://ko-fi.com/theofyisus)
+
+---
+
+## ☕ Apoya el Proyecto / Donaciones
+
+**Cajita** es completamente gratuita, sin anuncios ni suscripciones. Si te resulta útil y quieres apoyar su desarrollo y mantenimiento, puedes invitarme un café en Ko-fi:
+
+[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/theofyisus)
+
+👉 **[https://ko-fi.com/theofyisus](https://ko-fi.com/theofyisus)**
 
 ---
 

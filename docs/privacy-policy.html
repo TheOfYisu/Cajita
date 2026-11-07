@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidad — Cajita (Privacy Policy)</title>
+  <style>
+    :root {
+      --bg: #f6f8f7;
+      --card: #ffffff;
+      --text: #111c18;
+      --muted: #52635c;
+      --accent: #123f36;
+      --accent-light: #278a68;
+      --border: #dfe7e4;
+      --warn-bg: #fff8eb;
+      --warn-border: #f5d08a;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1412;
+        --card: #13211e;
+        --text: #ecf3f0;
+        --muted: #9ab0a7;
+        --accent: #34b388;
+        --accent-light: #278a68;
+        --border: #223631;
+        --warn-bg: #261f10;
+        --warn-border: #664d16;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 24px 16px 64px;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    header {
+      background: linear-gradient(135deg, #123f36 0%, #1d6352 100%);
+      color: #ffffff;
+      padding: 32px 28px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(18, 63, 54, 0.18);
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 1.9rem;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      margin: 4px 0;
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+    .lang-nav {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .lang-nav a {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .lang-nav a:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    h2 {
+      color: var(--accent);
+      margin-top: 0;
+      font-size: 1.4rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+    h3 {
+      margin-top: 24px;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+    }
+    p, li {
+      color: var(--text);
+    }
+    .muted {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(39, 138, 104, 0.15);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.82rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    .notice {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      padding: 14px 18px;
+      border-radius: 12px;
+      margin: 16px 0;
+      font-size: 0.94rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      color: var(--muted);
+      font-weight: 700;
+    }
+    a {
+      color: var(--accent-light);
+    }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 36px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>💚 Cajita — Política de Privacidad / Privacy Policy</h1>
+      <p><strong>App:</strong> Cajita (<code>com.cajita.app</code>) · Finanzas personales <em>local-first</em></p>
+      <p><strong>Última actualización / Last updated:</strong> 6 de noviembre de 2026</p>
+      <div class="lang-nav">
+        <a href="#es">🇪🇸 Español</a>
+        <a href="#en">🇺🇸 English</a>
+        <a href="https://github.com/TheOfYisu/Cajita">📦 GitHub Repository</a>
+      </div>
+    </header>
+
+    <section id="es" class="card">
+      <h2>🇪🇸 Política de Privacidad (Español)</h2>
+      <div>
+        <span class="badge">100 % Local-First</span>
+        <span class="badge">SQLCipher AES-256</span>
+        <span class="badge">0 % Servidores Propios</span>
+        <span class="badge">Sin Anuncios ni Rastreadores</span>
+        <span class="badge">App Gratuita</span>
+      </div>
+
+      <h3>1. Resumen Ejecutivo</h3>
+      <p>
+        <strong>Cajita</strong> es una aplicación gratuita de finanzas personales diseñada bajo una arquitectura <strong>100 % local (<em>local-first</em>)</strong>.
+        El desarrollador <strong>no recopila, almacena, vende ni comparte</strong> ningún dato personal ni financiero. No existen servidores propios del desarrollador, no se requiere crear cuentas de usuario y la aplicación no integra SDKs de publicidad (no usa <code>AD_ID</code> ni <code>IDFA</code>), analíticas ni rastreadores de terceros. El enlace opcional de apoyo al creador en <a href="https://ko-fi.com/theofyisus" target="_blank" rel="noopener">Ko-fi</a> se abre en el navegador externo del teléfono, es completamente voluntario, no desbloquea funciones adicionales y Cajita no recibe ni procesa datos de pago.
+      </p>
+
+      <h3>2. Datos Registrados por el Usuario y Cifrado Local</h3>
+      <p>Toda la información que introduces en la aplicación (cuentas, saldos, ingresos, gastos, transferencias, presupuestos, gastos fijos, suscripciones, retiros de efectivo, préstamos y contactos asociados en el módulo «Personas») se guarda <strong>exclusivamente en tu dispositivo</strong> dentro de una base de datos SQLite local (<code>cajita.db</code>) cifrada en reposo mediante <strong>SQLCipher (AES-256-CBC + HMAC-SHA256)</strong>.</p>
+      <p>La clave de cifrado de 256 bits se genera localmente en tu teléfono y se protege en el llavero seguro por hardware del sistema operativo (<strong>Keychain</strong> en iOS y <strong>Android Keystore</strong> en Android).</p>
+
+      <h3>3. Copia de Seguridad en iCloud (Solo iOS)</h3>
+      <p>En dispositivos iOS, si tienes activa tu cuenta de iCloud Drive e iCloud Keychain, Cajita guarda una copia de seguridad del archivo cifrado <code>cajita.db</code> directamente en tu contenedor privado de iCloud (<code>iCloud.com.cajita.app</code>) y sincroniza la clave mediante tu <strong>iCloud Keychain</strong> personal para permitir restaurar tus datos si cambias de iPhone o reinstalas la app. Esta comunicación ocurre únicamente entre tu dispositivo y Apple bajo la <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">Política de Privacidad de Apple</a>; el desarrollador no tiene acceso alguno a tu iCloud ni a tu clave.</p>
+
+      <h3>4. Permisos del Dispositivo</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Permiso / Función</th>
+            <th>Uso dentro de Cajita</th>
+            <th>¿Se envía fuera del teléfono?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Biometría (Face ID / Touch ID / Huella)</strong></td>
+            <td>Desbloqueo local de la app si activas <em>Bloquear la app</em> en Ajustes → Seguridad. Procesado íntegramente por el sistema operativo.</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><strong>Notificaciones locales</strong></td>
+            <td>Recordatorios programados en el propio dispositivo antes del vencimiento de tus suscripciones y gastos fijos.</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><strong>Archivos y Compartir (CSV / JSON)</strong></td>
+            <td>Importar movimientos desde un archivo CSV seleccionado por ti o exportar tus movimientos (CSV) y copias de seguridad (JSON).</td>
+            <td>Solo a donde tú elijas exportar/compartir</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="notice">
+        <strong>Nota sobre exportaciones manuales:</strong> Los archivos CSV y JSON exportados manualmente desde <em>Ajustes → Datos</em> se generan en texto plano (sin cifrar) para permitir su lectura o migración a otro teléfono. Guárdalos en un lugar seguro.
+      </div>
+
+      <h3>5. Aclaración sobre Servicios Financieros</h3>
+      <p><strong>Cajita NO es un banco, entidad financiera, billetera digital, pasarela de pagos ni prestamista.</strong> Es una herramienta gratuita de registro contable y presupuesto personal manual/offline. No se conecta con bancos, no solicita claves bancarias, no mueve dinero real ni otorga préstamos o créditos reales.</p>
+
+      <h3>6. Eliminación y Control Total de tus Datos</h3>
+      <ul>
+        <li><strong>Desde la app:</strong> Puedes borrar todos los datos locales de forma inmediata desde <em>Ajustes → Privacidad y datos → Borrar todos los datos locales</em>.</li>
+        <li><strong>Desinstalación:</strong> Al desinstalar la app se elimina la base de datos local cifrada.</li>
+        <li><strong>Copia en iCloud (iOS):</strong> Puedes borrar el respaldo desde <em>Ajustes de iOS → Apple ID → iCloud → Gestionar almacenamiento → Cajita → Eliminar datos</em>.</li>
+      </ul>
+
+      <h3>7. Contacto</h3>
+      <p>
+        <strong>Desarrollador:</strong> Jesús Daniel Garizao Mejía (<code>TheOfYisu</code>)<br />
+        <strong>Correo electrónico:</strong> <a href="mailto:jesudgm.11@proton.me">jesudgm.11@proton.me</a><br />
+        <strong>Repositorio:</strong> <a href="https://github.com/TheOfYisu/Cajita">https://github.com/TheOfYisu/Cajita</a>
+      </p>
+    </section>
+
+    <section id="en" class="card">
+      <h2>🇺🇸 Privacy Policy (English)</h2>
+      <div>
+        <span class="badge">100% Local-First</span>
+        <span class="badge">SQLCipher AES-256</span>
+        <span class="badge">Zero Backend Servers</span>
+        <span class="badge">No Ads or Trackers</span>
+        <span class="badge">Free App</span>
+      </div>
+
+      <h3>1. Executive Summary</h3>
+      <p>
+        <strong>Cajita</strong> is a free personal finance application built on a <strong>100% local-first architecture</strong>.
+        The developer <strong>does not collect, store, transmit, sell, or share</strong> any personal or financial data. Cajita operates with zero backend servers, requires no user registration or account creation, and contains no advertising SDKs (no <code>AD_ID</code> or <code>IDFA</code>), no analytics, and no third-party trackers. An optional link to support the creator on <a href="https://ko-fi.com/theofyisus" target="_blank" rel="noopener">Ko-fi</a> opens in the device's external web browser, is purely voluntary, unlocks no in-app features, and Cajita never processes or receives payment information.
+      </p>
+
+      <h3>2. On-Device Data Storage & Encryption</h3>
+      <p>All data you enter into Cajita (accounts, balances, income, expenses, transfers, budgets, recurring bills, subscriptions, cash withdrawals, loans, and optional contact details in "People") is stored <strong>exclusively on your device</strong> inside a local SQLite database (<code>cajita.db</code>) encrypted at rest with <strong>SQLCipher (AES-256-CBC + HMAC-SHA256)</strong>.</p>
+      <p>The 256-bit encryption key is generated locally on your device and stored in hardware-backed system storage (<strong>iOS Keychain</strong> on iOS and <strong>Android Keystore</strong> on Android).</p>
+
+      <h3>3. iCloud Backup (iOS Only)</h3>
+      <p>On iOS, if you are signed into iCloud Drive and iCloud Keychain, Cajita backs up the encrypted <code>cajita.db</code> file directly to your private iCloud Drive ubiquity container (<code>iCloud.com.cajita.app</code>) and syncs the encryption key through your personal <strong>iCloud Keychain</strong> so you can restore your data on a new iPhone or after reinstalling. This transfer occurs strictly between your device and Apple under <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">Apple's Privacy Policy</a>; the developer has zero access to your iCloud account or encryption keys.</p>
+
+      <h3>4. Device Permissions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Permission / Feature</th>
+            <th>Purpose in Cajita</th>
+            <th>Leaves Device?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Biometrics (Face ID / Touch ID / Fingerprint)</strong></td>
+            <td>Unlocks the app locally when App Lock is enabled in Settings → Security. Handled entirely by the operating system.</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><strong>Local Notifications</strong></td>
+            <td>Schedules on-device reminders ahead of upcoming subscription and recurring bill due dates.</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><strong>Files & Sharing (CSV / JSON)</strong></td>
+            <td>Allows importing transactions from a user-selected CSV file or exporting transactions (CSV) and full backups (JSON).</td>
+            <td>Only where you explicitly choose to share</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>5. Financial Services Disclaimer</h3>
+      <p><strong>Cajita is NOT a bank, financial institution, digital wallet, payment processor, or loan provider.</strong> It is a free, manual, offline personal bookkeeping and budgeting tool. It does not connect to banks, request banking credentials, process real money transfers, or issue/facilitate real loans or credit.</p>
+
+      <h3>6. Data Deletion & User Control</h3>
+      <ul>
+        <li><strong>In-App Wipe:</strong> You can delete all local data at any time from <em>Settings → Privacy & Data → Delete All Local Data</em> (<em>Ajustes → Privacidad y datos → Borrar todos los datos locales</em>).</li>
+        <li><strong>Uninstalling:</strong> Uninstalling the app removes the encrypted local database from your device.</li>
+        <li><strong>iCloud Backup (iOS):</strong> You can delete your iCloud backup via <em>iOS Settings → Apple ID → iCloud → Manage Account Storage → Cajita → Delete Data</em>.</li>
+      </ul>
+
+      <h3>7. Contact</h3>
+      <p>
+        <strong>Developer:</strong> Jesús Daniel Garizao Mejía (<code>TheOfYisu</code>)<br />
+        <strong>Email:</strong> <a href="mailto:jesudgm.11@proton.me">jesudgm.11@proton.me</a><br />
+        <strong>Repository:</strong> <a href="https://github.com/TheOfYisu/Cajita">https://github.com/TheOfYisu/Cajita</a>
+      </p>
+    </section>
+
+    <footer>
+      © 2026 Jesús Daniel Garizao Mejía (TheOfYisu) · Cajita — Local-first personal finance
+    </footer>
+  </div>
+</body>
+</html>

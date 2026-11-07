@@ -101,6 +101,10 @@ function Navigator() {
             name="settings/security"
             options={{ presentation: "modal" }}
           />
+          <Stack.Screen
+            name="settings/privacy"
+            options={{ presentation: "modal" }}
+          />
         </Stack>
       </AppLockGate>
     </NavThemeProvider>
