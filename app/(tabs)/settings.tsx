@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, Alert, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  Pressable,
+  Platform,
+} from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,6 +38,7 @@ export default function SettingsScreen() {
   const [hasCloudBackup, setHasCloudBackup] = React.useState(false);
 
   React.useEffect(() => {
+    if (Platform.OS !== "ios") return;
     void getLastBackupAt().then(setLastBackup);
     void isCloudBackupAvailable().then(setHasCloudBackup);
   }, []);
@@ -193,14 +201,18 @@ export default function SettingsScreen() {
           label: "Exportar backup (JSON)",
           onPress: onExportBackup,
         },
-        {
-          icon: "cloud-download",
-          label: "Restaurar desde iCloud",
-          hint: hasCloudBackup
-            ? "Reemplaza los datos con el backup guardado"
-            : "No hay backup en iCloud todavía",
-          onPress: onRestore,
-        },
+        ...(Platform.OS === "ios"
+          ? [
+              {
+                icon: "cloud-download",
+                label: "Restaurar desde iCloud",
+                hint: hasCloudBackup
+                  ? "Reemplaza los datos con el backup guardado"
+                  : "No hay backup en iCloud todavía",
+                onPress: onRestore,
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -266,36 +278,44 @@ export default function SettingsScreen() {
           </Text>
         </View>
       </View>
-      <Card onPress={onBackup} style={{ marginBottom: 16 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Ionicons
-            name="cloud-upload-outline"
-            size={24}
-            color={colors.transfer}
-          />
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{ color: colors.text, fontWeight: "700", fontSize: 15 }}
-            >
-              Copia de seguridad iCloud
-            </Text>
-            <Text
-              style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}
-            >
-              {lastBackup
-                ? `Último backup: ${new Date(lastBackup).toLocaleString("es-CO")}`
-                : "Sin backup todavía"}
-              {totalPending > 0 ? ` · ${totalPending} cambios pendientes` : ""}
-            </Text>
-            <Text
-              style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}
-            >
-              Automática en cada cambio · toca para subir ahora
-            </Text>
+      {Platform.OS === "ios" ? (
+        <Card onPress={onBackup} style={{ marginBottom: 16 }}>
+          <View
+            style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+          >
+            <Ionicons
+              name="cloud-upload-outline"
+              size={24}
+              color={colors.transfer}
+            />
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{ color: colors.text, fontWeight: "700", fontSize: 15 }}
+              >
+                Copia de seguridad iCloud
+              </Text>
+              <Text
+                style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}
+              >
+                {lastBackup
+                  ? `Último backup: ${new Date(lastBackup).toLocaleString("es-CO")}`
+                  : "Sin backup todavía"}
+                {totalPending > 0 ? ` · ${totalPending} cambios pendientes` : ""}
+              </Text>
+              <Text
+                style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}
+              >
+                Automática en cada cambio · toca para subir ahora
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={colors.textMuted}
+            />
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-        </View>
-      </Card>
+        </Card>
+      ) : null}
 
       {sections.map((s) => (
         <View key={s.title} style={{ marginBottom: 16 }}>
