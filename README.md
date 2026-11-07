@@ -91,7 +91,7 @@ El desarrollo es en Windows, así que la compilación nativa corre en la nube.
 El repo trae `codemagic.yaml` con dos workflows (`ios-release`, `android-release`) que generan los proyectos nativos en CI con `npx expo prebuild`. Se disparan al crear un tag `v*`:
 
 ```bash
-git tag v1.0.9 && git push origin v1.0.9
+git tag v1.0.10 && git push origin v1.0.10
 ```
 
 **EAS Build (alternativa)**

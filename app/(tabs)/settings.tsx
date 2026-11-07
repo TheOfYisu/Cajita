@@ -372,7 +372,7 @@ export default function SettingsScreen() {
         style={{ color: colors.textMuted, fontSize: 11, textAlign: "center" }}
         onPress={refresh}
       >
-        v{Constants.expoConfig?.version ?? "1.0.9"}
+        v{Constants.expoConfig?.version ?? "1.0.10"}
       </Text>
     </Screen>
   );
