@@ -31,7 +31,7 @@ const PILLARS: {
   {
     icon: "eye-off",
     title: "Sin publicidad, analíticas ni rastreadores",
-    body: "La app es completamente gratuita y no incorpora SDKs publicitarios (no utiliza AD_ID ni IDFA), telemetría ni rastreadores de terceros. El enlace opcional a Ko-fi se abre en tu navegador externo y no recopila datos dentro de la app.",
+    body: "La app es completamente gratuita y no incorpora SDKs publicitarios (no utiliza AD_ID ni IDFA), telemetría ni rastreadores de terceros. No se recopilan datos personales ni financieros.",
   },
   {
     icon: "cloud-done",

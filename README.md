@@ -1,248 +1,115 @@
 # 💚 Cajita
 
-Finanzas personales **local-first** para iOS. Tus datos viven cifrados en tu dispositivo y se sincronizan con tu iCloud. Sin servidores, sin anuncios, sin trackers.
-
-Gestiona tus cuentas, tarjetas de crédito, deudas, préstamos, gastos fijos y retiros de efectivo con un flujo contable correcto — una alternativa moderna y privada a Flow, Cashew y Dime.
-
-TypeScript React Native Expo SQLCipher CloudKit Bundle
+> **Finanzas personales privadas y locales para iOS y Android.**  
+> Tus datos financieros te pertenecen: viven cifrados en tu dispositivo y se respaldan en tu propia nube privada. Sin servidores de terceros, sin cuentas obligatorias, sin anuncios ni rastreadores.
 
 ---
 
-## 📱 Preview
+## 📱 Capturas
 
-|                         |                         |                         |
-| ----------------------- | ----------------------- | ----------------------- |
-| ![img_1](img/img_1.png) | ![img_2](img/img_2.png) | ![img_3](img/img_3.png) |
-| ![img_4](img/img_4.png) | ![img_5](img/img_5.png) | ![img_6](img/img_6.png) |
+| Inicio y Resumen | Movimientos y Filtros | Cartera y Cuentas |
+| :---: | :---: | :---: |
+| <img src="img/img_1.png" width="260" alt="Inicio" /> | <img src="img/img_2.png" width="260" alt="Movimientos" /> | <img src="img/img_3.png" width="260" alt="Cartera" /> |
 
----
-
-## ✨ Features
-
-- **Múltiples cuentas**: Banco, Efectivo, Ahorro, Cajita, Tarjeta de crédito (con cupo), CDT y Deuda
-- **Saldo en tiempo real** por cuenta, color e ícono personalizados
-- **Gasto / Ingreso / Transferencia / Balance Correction**: las transferencias entre cuentas no cuentan como gasto ni ingreso
-- **Pago de tarjeta → reduce la deuda**: transferencia desde tu cuenta de fondos que baja el saldo de la tarjeta
-- **Préstamos bidireccionales**: «Debo» (borrowed) y «Presté» (lent), con cuotas que reducen el saldo pendiente e intereses/costos (TotalOffset)
-- **Personas**: ficha con teléfono, correo, identificación y notas; préstamos vinculados a cada persona
-- **Gastos fijos y servicios**: checklist mensual (pendiente / pagado / omitido / vencido) con monto estimado y día de pago
-- **Suscripciones**: parametrizables con frecuencia, antelación de aviso y recordatorios locales (N días antes + el día anterior + el mismo día)
-- **Retiros de efectivo**: «retiré $X» y la app descuenta automáticamente los gastos en efectivo; sobrante al cerrar el mes
-- **Estadísticas**: patrimonio neto, ingresos/gastos del mes, desglose por categoría, series mensuales y presupuestos
-- **Importación CSV**: formato extendido con cuentas, cupos, transferencias, préstamos y personas; descarga de plantilla incluida
-- **Exportación**: movimientos (CSV) y backup completo (JSON)
-- **Dark / Light mode**: tema claro, oscuro y automático, con 10 colores de acento
-- **Bloqueo con biometría**: Face ID / Touch ID / huella al abrir y al volver de segundo plano
-- **Atajos nativos de iOS (`AppIntents` & Quick Actions)**: integración con el **Botón de Acción**, **Doble/Triple Toque Atrás (Back Tap)**, **Siri**, **app Atajos** y menú rápido al mantener presionado el icono
+| Análisis Financiero | Presupuestos y Categorías | Atajos y Acciones Rápidas |
+| :---: | :---: | :---: |
+| <img src="img/img_4.png" width="260" alt="Análisis" /> | <img src="img/img_5.png" width="260" alt="Presupuestos" /> | <img src="img/img_6.png" width="260" alt="Atajos" /> |
 
 ---
 
-## 🛠️ Technology Stack
+## 💡 ¿Por qué Cajita?
 
-| Layer         | Technology                                                   |
-| ------------- | ------------------------------------------------------------ |
-| Framework     | React Native 0.88 + Expo SDK 58                              |
-| Language      | TypeScript (estricto) + Swift (módulos nativos iOS)          |
-| Navigation    | expo-router                                                  |
-| Database      | expo-sqlite + **SQLCipher** (SQLite cifrado AES-256)         |
-| Sync / Backup | CloudKit / iCloud (`NSUbiquitousContainers` + módulo nativo) |
-| iOS Actions   | Apple `AppIntents` (`AppShortcutsProvider`) + Quick Actions  |
-| Security      | expo-local-authentication · expo-secure-store · expo-crypto  |
-| Notifications | expo-notifications (recordatorios locales)                   |
-| Charts        | SVG/gráficos propios (`Charts.tsx`)                          |
-| CI/CD         | Codemagic (`codemagic.yaml`) — build iOS/Android en la nube  |
-| Build         | esbuild / Metro Bundler                                      |
+La mayoría de aplicaciones de finanzas personales exigen crear cuentas con correo, sincronizan tus ingresos y gastos en servidores ajenos o venden analíticas a intermediarios. 
+
+**Cajita está diseñada bajo la filosofía *Local-First*:**
+- **Privacidad Total**: Tu base de datos SQLite vive en tu teléfono y está cifrada de punto a punto con **SQLCipher (AES-256)**.
+- **Sin Dependencias de Servidores**: Funciona 100% offline, en modo avión o sin cobertura móvil.
+- **Flujo Contable Real**: Las transferencias entre cuentas propias no distorsionan tus reportes de gastos o ingresos; los pagos a tarjetas de crédito reducen automáticamente la deuda de la tarjeta.
+- **Cero Publicidad**: Sin SDKs publicitarios, sin venta de datos y sin suscripciones forzadas.
 
 ---
 
-## 🚀 Installation
+## ✨ Funcionalidades Principales
 
-### From source
+- **Gestión Integral de Cuentas**: Bancos, Efectivo, Ahorro, Tarjetas de Crédito (con control de cupo disponible), CDTs y Préstamos.
+- **Registro Rápido con Selector de Calendario**: Registro ágil de gastos, ingresos y transferencias con fecha visual interactiva.
+- **Acciones Rápidas y Atajos Nativos (iOS)**: Registra operaciones desde el **Botón de Acción**, **Toque Posterior (Back Tap)**, **Siri** o la app **Atajos** sin necesidad de abrir la aplicación.
+- **Préstamos y Personas**: Control bidireccional de préstamos («Me deben» y «Debo») vinculado a contactos con historial de cuotas y saldos pendientes.
+- **Gastos Fijos y Suscripciones**: Checklist mensual recurrente con alertas locales para recordar fechas de corte y vencimientos.
+- **Retiros de Efectivo**: Registra el dinero retirado del cajero y controla cómo se gasta en efectivo durante el mes.
+- **Métricas y Análisis**: Gráficos interactivos de evolución patrimonial, ingresos vs. gastos por categoría y presupuestos mensuales.
+- **Seguridad Biométrica**: Bloqueo instantáneo con Face ID, Touch ID o huella dactilar.
+- **Respaldo Privado en iCloud (iOS)**: Copia de seguridad automática y cifrada en tu cuenta privada de Apple ID.
+- **Importación y Exportación**: Respalda en JSON y exporta tus transacciones en formato CSV libre cuando lo desees.
+
+---
+
+## 🛠️ Arquitectura y Tecnologías
+
+Diseñado como un producto móvil robusto, moderno y ligero:
+
+- **Frontend Móvil**: React Native + TypeScript con Expo (New Architecture / Fabric).
+- **Almacenamiento Seguro**: Base de datos local SQLite cifrada por hardware con **SQLCipher (AES-256-CBC)**.
+- **Integraciones Nativas**: Módulos nativos en Swift (`AppIntents`, sincronización iCloud con `NSFileCoordinator`) y compatibilidad multiplataforma para Android.
+- **Diseño**: Interfaz moderna adaptable a modo claro y oscuro con múltiples temas de acento visual.
+
+---
+
+## 🚀 Inicio Rápido para Desarrolladores
+
+Si deseas compilar o explorar el proyecto localmente:
 
 ```bash
+# Clonar el repositorio
 git clone https://github.com/TheOfYisu/Cajita.git
-cd cajita
+cd Cajita
+
+# Instalar dependencias
 npm install
+
+# Iniciar entorno de desarrollo
+npm start
 ```
 
-### Dev build (necesario)
-
-> ⚠️ **Expo Go ya no es compatible.** La app usa SQLCipher (módulo nativo), así que necesita un **dev build**.
-
-- **Android (Windows):** `npx expo run:android` con un emulador o dispositivo conectado.
-- **iOS:** genera un dev build en Codemagic/EAS (`ios_signing.distribution_type: development`), instálalo en el dispositivo y luego `npx expo start --dev-client`.
-- **Web (solo pruebas de UI):** `npx expo start --web` — en web no hay cifrado ni módulos nativos.
+> **Nota:** Debido a que la base de datos utiliza librerías nativas de cifrado (SQLCipher), se requiere compilar un build nativo para pruebas (`npx expo run:ios` o `npx expo run:android`).
 
 ---
 
-## 🧑‍💻 Development
+## ☕ Apoya el Proyecto
 
-```bash
-npm run dev      # dev build con expo start --dev-client
-npm run web      # expo start --web
-npm run build    # expo prebuild (genera ios/ y android/)
-npm run lint     # expo lint
-```
+**Cajita** es un proyecto independiente desarrollado con dedicación para ofrecer una herramienta financiera limpia, gratuita y verdaderamente privada.
 
-### Build para iOS / Android (desde Windows)
+Si la app te resulta útil en tu día a día y quieres apoyar su mantenimiento continuo y nuevas versiones, puedes invitarme un café:
 
-El desarrollo es en Windows, así que la compilación nativa corre en la nube.
+<p align="left">
+  <a href="https://ko-fi.com/theofyisus" target="_blank">
+    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Apóyame en Ko-fi" />
+  </a>
+</p>
 
-**Codemagic (recomendado) — `codemagic.yaml`**
-
-El repo trae `codemagic.yaml` con dos workflows (`ios-release`, `android-release`) que generan los proyectos nativos en CI con `npx expo prebuild`. Se disparan al crear un tag `v*`:
-
-```bash
-git tag v1.0.10 && git push origin v1.0.10
-```
-
-**EAS Build (alternativa)**
-
-```bash
-npx eas-cli login
-npx eas-cli build --platform ios
-```
-
-> La configuración de iCloud ya está en `app.json` (`NSUbiquitousContainers` + entitlements vía `plugins/withCajitaEntitlements.js`). El App ID `com.cajita.app` debe tener la capacidad **iCloud** habilitada en Apple Developer con el contenedor `iCloud.com.cajita.app`. El entitlement de Key-Value Storage usa `$(TeamIdentifierPrefix)$(CFBundleIdentifier)` para coincidir con el provisioning profile.
-
----
-
-## 📖 Usage
-
-### Cuentas
-
-Crea cuentas de cualquier tipo, define cupo en tarjetas, marca una **cuenta principal**, configura vencimiento y rendimiento en CDTs, y archiva cuentas que ya no uses.
-
-### Transacciones
-
-Registra gastos, ingresos y transferencias. El **pago de tarjeta / crédito** se hace como transferencia desde tu cuenta de fondos: el dinero sale de la cuenta **y** reduce la deuda, sin distorsionar tus reportes de gasto.
-
-### Gastos fijos y servicios
-
-Parametriza arriendo, administración, agua, luz, gas, internet, celular… con monto estimado y día de pago. Cada mes aparecen como **pendiente** hasta que los marcas como pagados (ingresando el monto real). Recordatorio antes del vencimiento y checklist en Inicio.
-
-### Préstamos y personas
-
-- **«Debo»** (borrowed): crédito recibido que pagas con cuotas.
-- **«Presté»** (lent): dinero que te deben, con abonos que reducen el saldo.
-- Cada préstamo puede vincularse a una **persona** (con teléfono, correo, identificación y notas) o a una entidad.
-
-### Retiros de efectivo
-
-Registra «retiré $X» (banco → efectivo). La app descuenta automáticamente los gastos en efectivo y te muestra cuánto queda del sobre y cuánto sobró al cerrar el mes.
-
-### Seguridad
-
-- Base de datos local cifrada con **SQLCipher (AES-256)**; la clave vive en el llavero seguro del dispositivo (Keychain iOS / Keystore Android).
-- La clave viaja por **iCloud Keychain** (misma Apple ID) para descifrar el backup en un iPhone nuevo.
-- Bloqueo de la app con **Face ID / Touch ID / huella**, con PIN/patrón del sistema como respaldo.
-- **Sin servidores** y **sin analytics ni trackers**.
-
-### Importación CSV
-
-Formato extendido — al importar puedes **agregar** a lo actual o **reemplazar todo**:
-
-```
-flow_title, flow_notes, flow_account_name, flow_account_type, flow_account_credit_limit,
-flow_account_is_primary, flow_account_maturity_date, flow_account_expected_yield,
-flow_transfer_to, flow_transfer_to_type, flow_amount, flow_date_of_transaction,
-flow_category_optional, flow_loan, flow_loan_type, flow_loan_kind,
-flow_person_name, flow_person_phone, flow_person_email, flow_person_identification, flow_person_notes
-```
-
-- **Transferencias** (`flow_transfer_to`): pago de tarjeta → **reduce la deuda**.
-- **Préstamos** (`flow_loan`): la primera fila define el principal; las siguientes son cuotas/abonos. `flow_loan_type` (borrowed/lent) y `flow_loan_kind` (entity/person).
-- **Personas** (`flow_person_*`): se crean y se vinculan al préstamo indicado.
-- **«Balance inicial»** en el título se importa como Balance Correction.
-- En **Ajustes → Importar CSV → Descargar plantilla** obtienes un CSV con todos los campos y ejemplos.
-
----
-
-## 📁 File Structure
-
-```
-app/
-├── (tabs)/               # Inicio, Cartera, Movimientos, Análisis, Ajustes
-├── account/              # Crear / editar cuenta (incluye CDT y cuenta principal)
-├── cash/                 # Retiros de efectivo
-├── fixed/pay/            # Confirmar pago de gasto fijo / servicio
-├── insight/              # Desgloses por métrica
-├── loan/                 # Deudas y préstamos (entidad / persona)
-├── person/               # Fichas de personas
-├── subscription/         # Suscripciones y gastos fijos (editor)
-├── transaction/          # Crear / editar transacción
-├── transfer/             # Transferencia entre cuentas
-├── settings/             # Perfil, apariencia, categorías, personas, presupuestos,
-│                         # recurrentes, notificaciones, seguridad, privacidad y datos
-└── import.tsx            # Importación CSV
-src/
-├── components/           # UI reutilizable (ui.tsx, Charts, AccountCard, DbGate, AppLockGate…)
-├── db/
-│   ├── database.ts       # Esquema SQLite + helpers (accountBalance, loanBalance, migraciones)
-│   └── encryption.ts     # Clave SQLCipher en el llavero seguro
-├── services/             # accountService, transactionService, loanService, personService,
-│                         # recurringService, cashService, notificationService, authService,
-│                         # cloudBackupService, csvImportService, syncService, prefsService…
-├── store/appStore.tsx    # Contexto global (balances, resúmenes, fixed, cash)
-└── theme/                # Paleta, iconos y ThemeProvider
-modules/                  # Módulo nativo CajitaCloudSync (iOS)
-plugins/                  # Config plugins (entitlements de iCloud, SQLCipher…)
-docs/                     # Política de privacidad web, Export Compliance y guía de despliegue en tiendas
-PRIVACY.md                # Política de Privacidad oficial (Español / English)
-codemagic.yaml            # CI/CD para iOS y Android
-```
-
----
-
-## 🔒 Privacidad y Publicación en Tiendas
-
-- **Política de Privacidad (Markdown):** [`PRIVACY.md`](./PRIVACY.md)
-- **Política de Privacidad (HTML para GitHub Pages / Tiendas):** [`docs/privacy-policy.html`](./docs/privacy-policy.html)
-- **Declaración de Encriptación (Apple Export Compliance):** [`docs/export-compliance-encryption.md`](./docs/export-compliance-encryption.md)
-- **Guía de Despliegue en App Store y Google Play:** [`docs/store-deployment-guide.md`](./docs/store-deployment-guide.md)
+👉 **[ko-fi.com/theofyisus](https://ko-fi.com/theofyisus)**
 
 ---
 
 ## 👤 Autor
 
-**Jesús Daniel Garizao Mejía**
-
-GitHub [TheOfYisu](https://github.com/TheOfYisu) · LinkedIn [jesudgm](https://www.linkedin.com/in/jesudgm/) · Ko-fi [theofyisus](https://ko-fi.com/theofyisus)
-
----
-
-## ☕ Apoya el Proyecto / Donaciones
-
-**Cajita** es completamente gratuita, sin anuncios ni suscripciones. Si te resulta útil y quieres apoyar su desarrollo y mantenimiento, puedes invitarme un café en Ko-fi:
-
-[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/theofyisus)
-
-👉 **[https://ko-fi.com/theofyisus](https://ko-fi.com/theofyisus)**
+**Jesús Daniel Garizao Mejía**  
+Software Engineer & Creator  
+- **GitHub**: [@TheOfYisu](https://github.com/TheOfYisu)  
+- **LinkedIn**: [jesudgm](https://www.linkedin.com/in/jesudgm/)  
 
 ---
 
 ## 🤖 Créditos
 
-Desarrollado con
-
-OpenCode · DeepSeek V4 Pro
-Claude Code · Sonnet 5
-Google Antigravity · Gemini
+Desarrollado con el apoyo de herramientas de IA:
+- OpenCode · DeepSeek V4 Pro
+- Claude Code · Sonnet 5
+- Google Antigravity · Gemini
 
 ---
 
 ## 📄 Licencia
 
-Copyright (c) 2026 Jesús Daniel Garizao Mejía (TheOfYisu) — Todos los derechos reservados.
-
-Software **propietario**: se concede una licencia de uso personal por dispositivo.
-Queda prohibida la redistribución o publicación del código, en todo o en parte,
-sin autorización previa por escrito del titular.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Copyright (c) 2026 Jesús Daniel Garizao Mejía (TheOfYisu). Todos los derechos reservados.  
+Software propietario para uso personal.

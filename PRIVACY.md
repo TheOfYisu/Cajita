@@ -23,7 +23,7 @@
 - **No recopilamos datos personales ni financieros:** El desarrollador no posee servidores propios ni bases de datos en la nube donde se envíe tu información.
 - **Sin cuentas ni registros obligatorios:** No necesitas crear una cuenta, ni proporcionar tu correo electrónico o número de teléfono para usar la aplicación.
 - **Sin rastreadores, analíticas ni publicidad:** Cajita no incluye SDKs de publicidad (no usa `AD_ID` ni `IDFA`), ni herramientas de telemetría, seguimiento o analítica de terceros.
-- **Gratuita y transparente:** La aplicación es completamente gratuita y todas sus funciones están desbloqueadas. Existe un enlace externo opcional a **Ko-fi** (`https://ko-fi.com/theofyisus`) por si el usuario desea apoyar voluntariamente al desarrollador; dicho enlace se abre en el navegador externo del dispositivo y Cajita no procesa pagos ni recopila datos de quienes aportan.
+- **Gratuita y transparente:** La aplicación es completamente gratuita y todas sus funciones están desbloqueadas de fábrica. No existen compras integradas, modelos freemium, muros de pago ni cobros ocultos de ningún tipo. Toda la funcionalidad está disponible sin costo para cualquier usuario.
 
 ---
 
@@ -135,7 +135,7 @@ Si tienes preguntas o inquietudes sobre esta Política de Privacidad o sobre las
 - **Zero Data Collection:** The developer does not operate backend servers or cloud databases, and never collects, transmits, sells, or shares your personal or financial information.
 - **No User Accounts Required:** You do not need to sign up, create an account, or provide an email address or phone number to use the app.
 - **No Ads, No Analytics, No Trackers:** Cajita contains zero third-party advertising SDKs (no `AD_ID` or `IDFA`), zero telemetry, and zero tracking scripts.
-- **Free & Private:** All features are 100% free and unlocked. An optional external link to **Ko-fi** (`https://ko-fi.com/theofyisus`) is provided for users who voluntarily wish to buy the developer a coffee; opening this link launches the device's external web browser, and Cajita never processes payments or collects any contributor data.
+- **Free & Private:** All features are 100% free and unlocked out of the box. There are no in-app purchases, freemium tiers, paywalls, or hidden charges. The application remains fully functional offline and open for every user without fees.
 
 ---
 

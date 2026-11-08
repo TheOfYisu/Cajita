@@ -6,7 +6,6 @@ import {
   Alert,
   Pressable,
   Platform,
-  Linking,
 } from "react-native";
 import { Image } from "expo-image";
 import Constants from "expo-constants";
@@ -254,12 +253,6 @@ export default function SettingsScreen() {
       title: "Acerca de",
       items: [
         {
-          icon: "cafe",
-          label: "Invítame un café (Ko-fi)",
-          hint: "ko-fi.com/theofyisus · Apoyo voluntario, la app es 100 % gratis",
-          onPress: () => openExternalLink("https://ko-fi.com/theofyisus"),
-        },
-        {
           icon: "document-lock",
           label: "Política de privacidad",
           hint: "100 % local · Sin servidores ni rastreadores",
@@ -386,10 +379,6 @@ export default function SettingsScreen() {
 
 function openLink(url: string) {
   void WebBrowser.openBrowserAsync(url);
-}
-
-function openExternalLink(url: string) {
-  void Linking.openURL(url);
 }
 
 function RowItem({
