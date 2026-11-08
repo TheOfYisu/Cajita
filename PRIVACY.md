@@ -1,6 +1,6 @@
 # Política de Privacidad — Cajita / Privacy Policy — Cajita
 
-**Última actualización / Last updated:** 6 de noviembre de 2026  
+**Última actualización / Last updated:** 8 de noviembre de 2026  
 **Aplicación / Application:** Cajita (`com.cajita.app`)  
 **Desarrollador / Developer:** Jesús Daniel Garizao Mejía (`TheOfYisu`)  
 **Contacto / Contact:** [jesudgm.11@proton.me](mailto:jesudgm.11@proton.me)  
@@ -21,6 +21,7 @@
 **Cajita** es una aplicación gratuita de finanzas personales diseñada bajo una arquitectura **100 % local (*local-first*)**.
 
 - **No recopilamos datos personales ni financieros:** El desarrollador no posee servidores propios ni bases de datos en la nube donde se envíe tu información.
+- **Cero conexión con bancos o correos electrónicos:** Cajita no se conecta a cuentas bancarias, APIs financieras ni buzones de correo electrónico, ni solicita contraseñas o credenciales bancarias. Todos los movimientos, cuentas y saldos son registrados exclusivamente por el usuario de forma manual o a través de sus atajos rápidos.
 - **Sin cuentas ni registros obligatorios:** No necesitas crear una cuenta, ni proporcionar tu correo electrónico o número de teléfono para usar la aplicación.
 - **Sin rastreadores, analíticas ni publicidad:** Cajita no incluye SDKs de publicidad (no usa `AD_ID` ni `IDFA`), ni herramientas de telemetría, seguimiento o analítica de terceros.
 - **Gratuita y transparente:** La aplicación es completamente gratuita y todas sus funciones están desbloqueadas de fábrica. No existen compras integradas, modelos freemium, muros de pago ni cobros ocultos de ningún tipo. Toda la funcionalidad está disponible sin costo para cualquier usuario.
@@ -77,7 +78,8 @@ Cajita solicita únicamente los permisos estrictamente necesarios para las funci
 
 **Cajita NO es un banco, entidad financiera, billetera digital, pasarela de pagos ni prestamista:**
 - La aplicación funciona exclusivamente como una **libreta contable y calculadora personal offline**.
-- **No se conecta a cuentas bancarias reales** ni solicita credenciales bancarias, contraseñas o tokens.
+- **No se conecta a cuentas bancarias reales, plataformas de banca en línea ni buzones de correo electrónico**, ni solicita credenciales bancarias, contraseñas, tokens ni permisos de lectura de correos.
+- **Registro manual y consciente:** Todos los movimientos, saldos y cuentas son creados e ingresados manualmente por el usuario o mediante atajos rápidos del sistema en su propio dispositivo.
 - **No procesa pagos, transferencias de dinero real ni inversiones.**
 - El módulo de «Préstamos y Deudas» es únicamente un registro informativo personal para llevar la cuenta de dinero prestado o adeudado; Cajita no otorga, intermedia ni gestiona créditos reales.
 - Cajita no ofrece asesoría financiera, legal ni tributaria.
@@ -133,6 +135,7 @@ Si tienes preguntas o inquietudes sobre esta Política de Privacidad o sobre las
 **Cajita** is a free personal finance application built on a **100% local-first architecture**.
 
 - **Zero Data Collection:** The developer does not operate backend servers or cloud databases, and never collects, transmits, sells, or shares your personal or financial information.
+- **No Connection to Banks or Email Accounts:** Cajita does not link to bank accounts, financial APIs, or email inboxes, nor does it ask for banking credentials or passwords. All transactions, accounts, and balances are entered manually and consciously by the user through the app or quick system shortcuts.
 - **No User Accounts Required:** You do not need to sign up, create an account, or provide an email address or phone number to use the app.
 - **No Ads, No Analytics, No Trackers:** Cajita contains zero third-party advertising SDKs (no `AD_ID` or `IDFA`), zero telemetry, and zero tracking scripts.
 - **Free & Private:** All features are 100% free and unlocked out of the box. There are no in-app purchases, freemium tiers, paywalls, or hidden charges. The application remains fully functional offline and open for every user without fees.
@@ -189,7 +192,8 @@ Cajita requests only the permissions strictly necessary for features you explici
 
 **Cajita is NOT a bank, financial institution, digital wallet, payment processor, or loan provider:**
 - The app is strictly a **manual, offline personal expense tracker and budgeting utility**.
-- **It does NOT connect to bank accounts** or request banking credentials.
+- **It does NOT connect to real bank accounts, online banking platforms, or email inboxes**, nor does it request banking credentials, passwords, tokens, or email access permissions.
+- **Manual User Entry:** All records, balances, and accounts are created and inputted directly and manually by the user within the app or via quick device shortcuts.
 - **It does NOT process payments, money transfers, or investments.**
 - The "Loans & Debts" feature is solely a personal record-keeping log to track money you owe or money owed to you; Cajita does not issue, broker, or facilitate real loans or credit.
 - Cajita does not provide financial, legal, or tax advice.

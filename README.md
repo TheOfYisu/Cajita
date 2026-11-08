@@ -38,6 +38,7 @@ La mayoría de aplicaciones de finanzas personales exigen crear cuentas con corr
 **Cajita está diseñada bajo la filosofía *Local-First*:**
 - **Privacidad Total**: Tu base de datos SQLite vive en tu teléfono y está cifrada de punto a punto con **SQLCipher (AES-256)**.
 - **Sin Dependencias de Servidores**: Funciona 100% offline, en modo avión o sin cobertura móvil.
+- **Sin Conexión Bancaria ni Acceso a Correos**: No vinculamos cuentas bancarias, no leemos correos electrónicos ni almacenamos credenciales. Todos los registros se ingresan conscientemente por ti dentro de la app o sus atajos.
 - **Flujo Contable Real**: Las transferencias entre cuentas propias no distorsionan tus reportes de gastos o ingresos; los pagos a tarjetas de crédito reducen automáticamente la deuda de la tarjeta.
 - **Cero Publicidad**: Sin SDKs publicitarios, sin venta de datos y sin suscripciones forzadas.
 
