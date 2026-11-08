@@ -5,15 +5,29 @@
 
 ---
 
-## 📱 Capturas
+## 📱 Capturas de Pantalla
 
-| Inicio y Resumen | Movimientos y Filtros | Cartera y Cuentas |
-| :---: | :---: | :---: |
-| <img src="img/img_1.png" width="260" alt="Inicio" /> | <img src="img/img_2.png" width="260" alt="Movimientos" /> | <img src="img/img_3.png" width="260" alt="Cartera" /> |
+### 🍏 iPhone (iOS)
 
-| Análisis Financiero | Presupuestos y Categorías | Atajos y Acciones Rápidas |
+| Inicio y Patrimonio | Cartera y Cuentas | Registro de Movimientos |
 | :---: | :---: | :---: |
-| <img src="img/img_4.png" width="260" alt="Análisis" /> | <img src="img/img_5.png" width="260" alt="Presupuestos" /> | <img src="img/img_6.png" width="260" alt="Atajos" /> |
+| <img src="assets/screenshots/iphone/CAPTURA_MOD_CLARO_1.jpg" width="250" alt="Inicio iPhone" /> | <img src="assets/screenshots/iphone/CAPTURA_MOD_CLARO_2.jpg" width="250" alt="Cartera iPhone" /> | <img src="assets/screenshots/iphone/CAPTURA_MOD_CLARO_3.jpg" width="250" alt="Movimientos iPhone" /> |
+
+| Análisis y Gráficos | Atajos de iOS en Segundo Plano | Modo Oscuro |
+| :---: | :---: | :---: |
+| <img src="assets/screenshots/iphone/CAPTURA_MOD_CLARO_4.jpg" width="250" alt="Análisis iPhone" /> | <img src="assets/screenshots/iphone/CAPTURA_MOD_CLARO_6.jpg" width="250" alt="Atajo de iOS" /> | <img src="assets/screenshots/iphone/CAPTURA_MOD_OSCURO_1.jpg" width="250" alt="Modo Oscuro iPhone" /> |
+
+### 🤖 Android
+
+| Inicio en Android | Cartera en Android | Movimientos en Android | Análisis en Android |
+| :---: | :---: | :---: | :---: |
+| <img src="assets/screenshots/android/Screenshot_20261108_165656.png" width="220" alt="Inicio Android" /> | <img src="assets/screenshots/android/Screenshot_20261108_165708.png" width="220" alt="Cartera Android" /> | <img src="assets/screenshots/android/Screenshot_20261108_165716.png" width="220" alt="Movimientos Android" /> | <img src="assets/screenshots/android/Screenshot_20261108_165722.png" width="220" alt="Análisis Android" /> |
+
+### 💻 iPadOS (Tablets)
+
+| Inicio en iPad | Cartera en iPad | Movimientos en iPad |
+| :---: | :---: | :---: |
+| <img src="assets/screenshots/ipad/IPAD_1_INICIO.jpg" width="260" alt="Inicio iPad" /> | <img src="assets/screenshots/ipad/IPAD_2_CARTERA.jpg" width="260" alt="Cartera iPad" /> | <img src="assets/screenshots/ipad/IPAD_3_MOVIMIENTOS.jpg" width="260" alt="Movimientos iPad" /> |
 
 ---
 

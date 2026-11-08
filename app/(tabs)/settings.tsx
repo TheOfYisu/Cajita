@@ -166,12 +166,16 @@ export default function SettingsScreen() {
           hint: "Streaming, gimnasio, arriendo, servicios de casa…",
           onPress: () => router.push("/settings/recurring"),
         },
-        {
-          icon: "flash",
-          label: "Acciones y Atajos de iOS",
-          hint: "Botón de Acción · Doble toque atrás · Siri · Quick Actions",
-          onPress: () => router.push("/settings/shortcuts"),
-        },
+        ...(Platform.OS === "ios"
+          ? [
+              {
+                icon: "flash" as const,
+                label: "Acciones y Atajos de iOS",
+                hint: "Botón de Acción · Doble toque atrás · Siri · Quick Actions",
+                onPress: () => router.push("/settings/shortcuts"),
+              },
+            ]
+          : []),
         {
           icon: "notifications",
           label: "Notificaciones",
