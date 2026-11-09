@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cajita — Finanzas Personales Privadas y Offline (Local-First)</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <meta name="description" content="Cajita es una app de finanzas personales local-first: tus datos viven en tu dispositivo cifrados con AES-256 (SQLCipher). Sin servidores, sin anuncios, sin conexión bancaria." />
+  <style>
+    :root {
+      --bg: #f6f8f7;
+      --card: #ffffff;
+      --text: #111c18;
+      --muted: #52635c;
+      --accent: #123f36;
+      --accent-light: #278a68;
+      --accent-hover: #1f6f53;
+      --border: #dfe7e4;
+      --tag-bg: rgba(39, 138, 104, 0.12);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1412;
+        --card: #13211e;
+        --text: #ecf3f0;
+        --muted: #9ab0a7;
+        --accent: #34b388;
+        --accent-light: #278a68;
+        --accent-hover: #3fc799;
+        --border: #223631;
+        --tag-bg: rgba(52, 179, 136, 0.16);
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 32px 16px 64px;
+    }
+    .container {
+      max-width: 840px;
+      margin: 0 auto;
+    }
+    .hero {
+      background: linear-gradient(135deg, #123f36 0%, #1d6352 100%);
+      color: #ffffff;
+      padding: 48px 32px;
+      border-radius: 24px;
+      margin-bottom: 32px;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(18, 63, 54, 0.22);
+    }
+    .app-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      margin-bottom: 16px;
+      background: #ffffff;
+    }
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 2.4rem;
+      letter-spacing: -0.03em;
+    }
+    .hero p.tagline {
+      margin: 0 auto 24px;
+      font-size: 1.15rem;
+      max-width: 600px;
+      opacity: 0.92;
+      line-height: 1.5;
+    }
+    .badges {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .badge {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      backdrop-filter: blur(8px);
+    }
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background: #ffffff;
+      color: #123f36;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+    .btn-primary:hover {
+      background: #f0fdf7;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    }
+    .feature-icon {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .feature-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.12rem;
+      color: var(--accent);
+    }
+    .feature-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    .docs-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+    .docs-section h2 {
+      margin-top: 0;
+      color: var(--accent);
+      font-size: 1.35rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .doc-link-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--text);
+    }
+    .doc-link-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .doc-link-item:hover .doc-title {
+      color: var(--accent-light);
+    }
+    .doc-title {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 2px;
+      transition: color 0.2s ease;
+    }
+    .doc-desc {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .doc-arrow {
+      color: var(--muted);
+      font-size: 1.2rem;
+      margin-left: 16px;
+    }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 40px;
+    }
+    footer a {
+      color: var(--accent-light);
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <img src="icon.png" alt="Cajita Icon" class="app-icon" />
+      <h1>Cajita</h1>
+      <p class="tagline">Tus finanzas personales bajo tu control. 100% <em>Local-First</em>, privadas y cifradas en tu propio dispositivo.</p>
+      
+      <div class="badges">
+        <span class="badge">🔒 Cifrado SQLCipher AES-256</span>
+        <span class="badge">🚫 Cero Conexión Bancaria</span>
+        <span class="badge">📴 100% Offline</span>
+        <span class="badge">☁️ Backup Seguro en iCloud</span>
+        <span class="badge">🚫 Cero Anuncios ni Trackers</span>
+      </div>
+
+      <div class="actions">
+        <a href="privacy-policy.html" class="btn btn-primary">
+          📄 Política de Privacidad
+        </a>
+        <a href="https://github.com/TheOfYisu/Cajita" target="_blank" rel="noopener" class="btn btn-secondary">
+          📦 Ver en GitHub
+        </a>
+      </div>
+    </header>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🛡️</span>
+        <h3>100% Local-First</h3>
+        <p>No recopilamos datos personales ni financieros. Cajita no opera servidores ni almacena tu información en la nube. Todo vive en tu teléfono.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🔐</span>
+        <h3>Cifrado AES-256</h3>
+        <p>Base de datos local cifrada con SQLCipher. Tu clave criptográfica se guarda en el hardware seguro de tu dispositivo (iOS Keychain o Android Keystore).</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🚫</span>
+        <h3>Sin Conexión Bancaria</h3>
+        <p>No vinculamos bancos ni leemos correos. Todos los movimientos se registran de forma consciente y rápida por ti o mediante atajos locales del sistema.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">☁️</span>
+        <h3>Respaldo en iCloud (iOS)</h3>
+        <p>Copia de seguridad atómica cifrada directamente a tu contenedor privado de iCloud. Cambia de iPhone o reinstala y recupera tus datos con seguridad.</p>
+      </div>
+    </div>
+
+    <section class="docs-section">
+      <h2>Documentación y Enlaces Oficiales</h2>
+      
+      <a href="privacy-policy.html" class="doc-link-item">
+        <div>
+          <div class="doc-title">📄 Política de Privacidad (Privacy Policy)</div>
+          <div class="doc-desc">Documento completo bilingüe (Español / English) conforme a GDPR, CCPA y normativas de tiendas de aplicaciones.</div>
+        </div>
+        <span class="doc-arrow">→</span>
+      </a>
+
+      <a href="https://github.com/TheOfYisu/Cajita/blob/main/SECURITY.md" target="_blank" rel="noopener" class="doc-link-item">
+        <div>
+          <div class="doc-title">🛡️ Política de Seguridad (Security Policy)</div>
+          <div class="doc-desc">Alcance técnico, versiones compatibles y canales para reporte responsable de vulnerabilidades en GitHub.</div>
+        </div>
+        <span class="doc-arrow">→</span>
+      </a>
+
+      <a href="https://github.com/TheOfYisu/Cajita" target="_blank" rel="noopener" class="doc-link-item">
+        <div>
+          <div class="doc-title">💻 Repositorio Oficial en GitHub</div>
+          <div class="doc-desc">Código fuente abierto, notas de versión y seguimiento de desarrollo.</div>
+        </div>
+        <span class="doc-arrow">→</span>
+      </a>
+    </section>
+
+    <footer>
+      <p>© 2026 Jesús Daniel Garizao Mejía (<a href="https://github.com/TheOfYisu" target="_blank" rel="noopener">TheOfYisu</a>) · Cajita (<code>com.cajita.app</code>)</p>
+      <p>Desarrollado con React Native & Expo · <a href="mailto:jesudgm.11@proton.me">Contacto de soporte</a></p>
+    </footer>
+  </div>
+</body>
+</html>
