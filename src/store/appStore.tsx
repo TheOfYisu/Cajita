@@ -26,10 +26,10 @@ import {
   lastMonthLeftover,
   WithdrawalView,
 } from "@/src/services/cashService";
-import { loanBalance as loanBalanceOf } from "@/src/services/loanService";
 import { syncSubscriptionNotifications } from "@/src/services/notificationService";
 import {
-  accountBalance,
+  allAccountBalances,
+  allLoanFlows,
   getDb,
   monthRange,
   Account,
@@ -96,11 +96,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const people = getPeople();
     const transactions = getTransactions({ limit: 400 });
     const budgets = getBudgets();
-    const balances: Record<number, number> = {};
+    const balances = allAccountBalances();
     let totalAssets = 0;
     for (const a of accounts) {
-      const b = accountBalance(a.id);
-      balances[a.id] = b;
+      const b = balances[a.id] ?? 0;
       if (!a.excludeFromTotals && !DEBT_TYPES.includes(a.type))
         totalAssets += b;
     }
@@ -121,11 +120,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const primaryAccountId = accounts.find((a) => a.isPrimary)?.id ?? null;
 
+    const loanFlows = allLoanFlows();
     let debtEntities = 0;
     let debtPeople = 0;
     let owedToMe = 0;
     for (const l of loans) {
-      const bal = Math.abs(loanBalanceOf(l.id));
+      const flow = loanFlows[l.id] ?? 0;
+      const rawBal = l.type === "borrowed"
+        ? l.total + l.totalOffset + flow
+        : l.total + l.totalOffset - flow;
+      const bal = Math.abs(rawBal);
       if (l.type === "lent") owedToMe += bal;
       else if (l.counterpartyKind === "person") debtPeople += bal;
       else debtEntities += bal;

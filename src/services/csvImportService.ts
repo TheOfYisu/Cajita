@@ -111,17 +111,6 @@ export function parseCsv(text: string): Row[] {
   return rows;
 }
 
-function pick(header: string, keys: string[]): number {
-  const parts = header.split(',');
-  for (let i = 0; i < parts.length; i++) {
-    const h = parts[i].trim().toLowerCase();
-    for (const k of keys) {
-      if (h === k) return i;
-    }
-  }
-  return -1;
-}
-
 function parseCsvLine(line: string): string[] {
   const out: string[] = [];
   let cur = '';
@@ -254,7 +243,6 @@ export const CSV_BOM = '\uFEFF';
 
 export function importCsv(text: string, mode: ImportMode = 'merge'): CsvImportResult {
   const rows = parseCsv(text);
-  const database = getDb();
   const result: CsvImportResult = { imported: 0, skipped: 0, accountsCreated: [], errors: [] };
   // En modo 'replace' se borra todo lo existente y el CSV queda como fuente única;
   // en modo 'merge' se suma a lo que ya hay.

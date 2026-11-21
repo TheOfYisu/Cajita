@@ -24,23 +24,23 @@ export default function TabLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Inicio', headerShown: false, tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} /> }}
+        options={{ title: 'Inicio', headerShown: false, tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color as string} /> }}
       />
       <Tabs.Screen
         name="accounts"
-        options={{ title: 'Cartera', tabBarIcon: ({ color, size }) => <Ionicons name="wallet" size={size} color={color} /> }}
+        options={{ title: 'Cartera', tabBarIcon: ({ color, size }) => <Ionicons name="wallet" size={size} color={color as string} /> }}
       />
       <Tabs.Screen
         name="transactions"
-        options={{ title: 'Movimientos', tabBarIcon: ({ color, size }) => <Ionicons name="swap-horizontal" size={size} color={color} /> }}
+        options={{ title: 'Movimientos', tabBarIcon: ({ color, size }) => <Ionicons name="swap-horizontal" size={size} color={color as string} /> }}
       />
       <Tabs.Screen
         name="stats"
-        options={{ title: 'Análisis', tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart" size={size} color={color} /> }}
+        options={{ title: 'Análisis', tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart" size={size} color={color as string} /> }}
       />
       <Tabs.Screen
         name="settings"
-        options={{ title: 'Ajustes', tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} /> }}
+        options={{ title: 'Ajustes', tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color as string} /> }}
       />
       {/* Rutas accesibles pero fuera de la barra de pestañas */}
       <Tabs.Screen name="loans" options={{ href: null, title: 'Deudas' }} />

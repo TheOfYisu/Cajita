@@ -43,24 +43,23 @@ export interface BudgetProgress {
 export function getBudgetProgress(monthStartDay = 1): BudgetProgress[] {
   const db = getDb();
   const { from, to } = monthRange(monthStartDay);
-  const rows = db.getAllSync<{
-    categoryId: number;
-    name: string;
-    color: string;
-    icon: string;
-    budget: number;
-  }>(
-    `SELECT b.categoryId AS categoryId, c.name AS name, c.color AS color, c.icon AS icon, b.amount AS budget
-     FROM budgets b JOIN categories c ON c.id = b.categoryId
-     WHERE b.deletedAt IS NULL ORDER BY c.name`,
+  return db.getAllSync<BudgetProgress>(
+    `SELECT b.categoryId AS categoryId,
+            c.name AS name,
+            c.color AS color,
+            c.icon AS icon,
+            b.amount AS budget,
+            COALESCE(SUM(ABS(t.amount)), 0) AS spent,
+            CASE WHEN b.amount > 0 THEN ROUND(COALESCE(SUM(ABS(t.amount)), 0) * 1.0 / b.amount, 4) ELSE 0 END AS pct
+     FROM budgets b
+     JOIN categories c ON c.id = b.categoryId
+     LEFT JOIN transactions t ON t.categoryId = b.categoryId
+                              AND t.deletedAt IS NULL
+                              AND t.type = 'expense'
+                              AND t.date BETWEEN ? AND ?
+     WHERE b.deletedAt IS NULL
+     GROUP BY b.categoryId, c.name, c.color, c.icon, b.amount
+     ORDER BY c.name`,
+    [from, to],
   );
-  return rows.map((r) => {
-    const spent =
-      db.getFirstSync<{ s: number }>(
-        `SELECT COALESCE(SUM(ABS(amount)),0) AS s FROM transactions
-         WHERE deletedAt IS NULL AND type='expense' AND categoryId = ? AND date BETWEEN ? AND ?`,
-        [r.categoryId, from, to],
-      )?.s ?? 0;
-    return { ...r, spent, pct: r.budget > 0 ? spent / r.budget : 0 };
-  });
 }

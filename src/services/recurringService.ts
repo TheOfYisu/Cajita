@@ -235,11 +235,28 @@ function statusOf(p: RecurringPayment): FixedStatus {
 
 /** Lista de gastos fijos del mes contable indicado (por defecto, el actual). */
 export function getFixedForMonth(periodKey?: string): FixedItem[] {
+  const db = getDb();
   const monthStartDay = getPrefs().monthStartDay;
   const key = periodKey ?? periodKeyOf(Date.now(), monthStartDay);
   const items = getFixedRecurring(false);
+  if (items.length === 0) return [];
+
+  // Trae todos los pagos ya materializados para este periodo en una sola consulta
+  const existingPayments = db.getAllSync<RecurringPayment>(
+    `SELECT * FROM recurring_payments WHERE periodKey = ? AND deletedAt IS NULL`,
+    [key],
+  );
+  const map = new Map<number, RecurringPayment>();
+  for (const p of existingPayments) {
+    map.set(p.recurringId, p);
+  }
+
   return items.map((r) => {
-    const payment = ensurePayment(r, key, monthStartDay);
+    let payment = map.get(r.id);
+    if (!payment) {
+      payment = ensurePayment(r, key, monthStartDay);
+      map.set(r.id, payment);
+    }
     const status = statusOf(payment);
     const displayAmount = status === 'paid' && payment.amount != null ? payment.amount : Math.abs(r.amount);
     return { recurring: r, payment, status, displayAmount };

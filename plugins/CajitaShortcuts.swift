@@ -386,6 +386,60 @@ struct AccionRapidaCajitaIntent: AppIntent {
   }
 }
 
+// MARK: - Intents de Apertura de UI (Botón de Acción y Atajos)
+
+@available(iOS 16.0, *)
+struct AbrirMenuAccionesIntent: AppIntent {
+  static var title: LocalizedStringResource = "Abrir menú de acciones en Cajita"
+  static var description = IntentDescription("Abre el menú interactivo para elegir qué deseas hacer en Cajita.")
+  static var openAppWhenRun: Bool = true
+
+  @MainActor
+  func perform() async throws -> some IntentResult {
+    triggerCajitaShortcut(route: "/quick-action")
+    return .result()
+  }
+}
+
+@available(iOS 16.0, *)
+struct AbrirNuevoGastoIntent: AppIntent {
+  static var title: LocalizedStringResource = "Registrar gasto en Cajita"
+  static var description = IntentDescription("Abre directamente el formulario para registrar un gasto.")
+  static var openAppWhenRun: Bool = true
+
+  @MainActor
+  func perform() async throws -> some IntentResult {
+    triggerCajitaShortcut(route: "/transaction/new?mode=expense")
+    return .result()
+  }
+}
+
+@available(iOS 16.0, *)
+struct AbrirNuevoIngresoIntent: AppIntent {
+  static var title: LocalizedStringResource = "Registrar ingreso en Cajita"
+  static var description = IntentDescription("Abre directamente el formulario para registrar un ingreso.")
+  static var openAppWhenRun: Bool = true
+
+  @MainActor
+  func perform() async throws -> some IntentResult {
+    triggerCajitaShortcut(route: "/transaction/new?mode=income")
+    return .result()
+  }
+}
+
+@available(iOS 16.0, *)
+struct AbrirTransferenciaIntent: AppIntent {
+  static var title: LocalizedStringResource = "Transferir dinero en Cajita"
+  static var description = IntentDescription("Abre directamente el formulario para transferir saldo.")
+  static var openAppWhenRun: Bool = true
+
+  @MainActor
+  func perform() async throws -> some IntentResult {
+    triggerCajitaShortcut(route: "/transaction/new?mode=transfer")
+    return .result()
+  }
+}
+
 @available(iOS 16.0, *)
 struct CajitaShortcutsProvider: AppShortcutsProvider {
   static var appShortcuts: [AppShortcut] {
@@ -398,6 +452,34 @@ struct CajitaShortcutsProvider: AppShortcutsProvider {
       ],
       shortTitle: "Acción rápida",
       systemImageName: "bolt.circle.fill"
+    )
+    AppShortcut(
+      intent: AbrirMenuAccionesIntent(),
+      phrases: [
+        "Menú de acciones en \(.applicationName)",
+        "Abrir menú en \(.applicationName)",
+        "Acciones de \(.applicationName)"
+      ],
+      shortTitle: "Menú de acciones",
+      systemImageName: "grid.circle.fill"
+    )
+    AppShortcut(
+      intent: AbrirNuevoGastoIntent(),
+      phrases: [
+        "Registrar gasto en \(.applicationName)",
+        "Nuevo gasto en \(.applicationName)"
+      ],
+      shortTitle: "Registrar gasto",
+      systemImageName: "arrow.down.circle.fill"
+    )
+    AppShortcut(
+      intent: AbrirNuevoIngresoIntent(),
+      phrases: [
+        "Registrar ingreso en \(.applicationName)",
+        "Nuevo ingreso en \(.applicationName)"
+      ],
+      shortTitle: "Registrar ingreso",
+      systemImageName: "arrow.up.circle.fill"
     )
   }
 }

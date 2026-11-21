@@ -1,13 +1,12 @@
 import React from 'react';
-import { View, Text, Alert } from 'react-native';
+import { View, Text, Alert, Share } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
-import { ModalScreen, Card, Field, Button, Label, PickRow, ProgressBar, formatMoney } from '@/src/components/ui';
+import { ModalScreen, Card, Field, Button, Label, PickRow, ProgressBar, formatMoney, parseCurrencyInput, calculateLoanTotals } from '@/src/components/ui';
 import { DateField } from '@/src/components/DateField';
 import { getLoan, deleteLoan, loanBalance } from '@/src/services/loanService';
-import { createTransaction } from '@/src/services/transactionService';
-import { getTransactions } from '@/src/services/transactionService';
+import { createTransaction, getTransactions } from '@/src/services/transactionService';
 
 export default function LoanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -17,7 +16,7 @@ export default function LoanDetailScreen() {
 
   const [account, setAccount] = React.useState<number | null>(null);
   const [payment, setPayment] = React.useState('');
-  const [date, setDate] = React.useState<number>(Date.now());
+  const [date, setDate] = React.useState<number>(() => Date.now());
 
   if (!loan) {
     return <ModalScreen title="Préstamo"><Text style={{ color: colors.text }}>No encontrado</Text></ModalScreen>;
@@ -36,8 +35,19 @@ export default function LoanDetailScreen() {
     ? (person?.name ?? loan.name)
     : loan.name;
 
+  const LOAN_TYPE_LABELS: Record<string, string> = {
+    libre_inversion: 'Libre inversión',
+    tarjeta: 'Tarjeta de crédito',
+    hipotecario: 'Hipotecario',
+    vehiculo: 'Vehicular',
+    personal: 'Personal',
+    educativo: 'Educativo',
+    comercial: 'Comercial',
+    otro: 'Otro',
+  };
+
   const pay = () => {
-    const amt = parseFloat(payment.replace(/[^\d.]/g, ''));
+    const amt = parseCurrencyInput(payment);
     if (!amt || amt <= 0) { Alert.alert('Monto inválido'); return; }
     if (!account) { Alert.alert('Selecciona la cuenta de fondos'); return; }
     const acct = accounts.find((a) => a.id === account)!;
@@ -56,6 +66,15 @@ export default function LoanDetailScreen() {
     Alert.alert('Registrado', `Pago de ${formatMoney(amt, prefs.currency)} aplicado.`);
   };
 
+  const onShareReminder = async () => {
+    const msg = `Hola ${counterparty}, te recuerdo el saldo pendiente de ${formatMoney(balance, prefs.currency)} correspondiente a "${loan.name}". ¡Muchas gracias!`;
+    try {
+      await Share.share({ message: msg });
+    } catch {
+      /* noop */
+    }
+  };
+
   const remove = () => {
     Alert.alert('Eliminar', `¿Eliminar "${loan.name}"?`, [
       { text: 'Cancelar', style: 'cancel' },
@@ -71,17 +90,43 @@ export default function LoanDetailScreen() {
       <Card style={{ marginBottom: 12, alignItems: 'center' }}>
         <Text style={{ color: colors.textMuted, fontSize: 12 }}>
           {isBorrowed ? 'Le debes a' : 'Te debe'} · {loan.counterpartyKind === 'person' ? 'persona' : 'entidad'}
+          {loan.loanType ? ` · ${LOAN_TYPE_LABELS[loan.loanType] || loan.loanType}` : ''}
         </Text>
         <Text style={{ color: colors.text, fontSize: 16, fontWeight: '800', marginTop: 2 }}>{counterparty}</Text>
         {person?.email ? <Text style={{ color: colors.textMuted, fontSize: 12 }}>{person.email}</Text> : null}
         <Text style={{ color: c, fontSize: 28, fontWeight: '900', marginTop: 8 }}>{formatMoney(balance, prefs.currency, hide)}</Text>
-        <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>
+        <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'center' }}>
           Original {formatMoney(loan.total, prefs.currency, hide)} · Ajuste {formatMoney(loan.totalOffset, prefs.currency, hide)}
+          {loan.installments ? ` · ${loan.installments} cuotas` : ''}
+          {loan.interestRate ? ` · ${loan.interestRate}% interés` : ''}
         </Text>
+        {loan.installments && loan.interestRate ? (() => {
+          const c = calculateLoanTotals(loan.total, loan.installments, loan.interestRate);
+          return (
+            <View style={{ marginTop: 8, padding: 8, backgroundColor: colors.surfaceAlt, borderRadius: 8, width: '100%', alignItems: 'center' }}>
+              <Text style={{ color: colors.text, fontSize: 12, fontWeight: '700' }}>
+                Proyección: Total a pagar {formatMoney(c.totalPayment, prefs.currency, hide)}
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 2 }}>
+                Cuota estimada: {formatMoney(c.installmentAmount, prefs.currency, hide)} / mes (intereses: +{formatMoney(c.totalInterest, prefs.currency, hide)})
+              </Text>
+            </View>
+          );
+        })() : null}
         {loan.notes ? <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'center' }}>{loan.notes}</Text> : null}
-        {person ? (
-          <Button title="Ver persona" variant="ghost" icon="person" onPress={() => router.push(`/person/${person.id}`)} style={{ marginTop: 10 }} />
-        ) : null}
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+          {person ? (
+            <Button title="Ver persona" variant="ghost" icon="person" onPress={() => router.push(`/person/${person.id}`)} />
+          ) : null}
+          {!isBorrowed && balance > 0 ? (
+            <Button
+              title="Recordar por WhatsApp"
+              variant="secondary"
+              icon="logo-whatsapp"
+              onPress={onShareReminder}
+            />
+          ) : null}
+        </View>
         {original > 0 ? (
           <View style={{ width: '100%', marginTop: 12 }}>
             <ProgressBar pct={paid / original} color={colors.positive} />

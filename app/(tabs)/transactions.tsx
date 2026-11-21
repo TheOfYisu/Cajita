@@ -33,17 +33,24 @@ export default function TransactionsScreen() {
     [text, type, accountId, categoryId],
   );
 
-  // Reinicia la paginación cuando cambian los filtros.
-  React.useEffect(() => { setLimit(PAGE); }, [filter]);
+  // Reinicia la paginación cuando cambian los filtros sin efectos en cascada.
+  const [prevFilter, setPrevFilter] = React.useState(filter);
+  if (filter !== prevFilter) {
+    setPrevFilter(filter);
+    setLimit(PAGE);
+  }
 
-  const rows = React.useMemo(
-    () => pageTransactions({ ...filter, limit: limit + 1, offset: 0 }),
-    [filter, limit, storeTx],
-  );
+  const rows = React.useMemo(() => {
+    void storeTx;
+    return pageTransactions({ ...filter, limit: limit + 1, offset: 0 });
+  }, [filter, limit, storeTx]);
   const hasMore = rows.length > limit;
   const data = hasMore ? rows.slice(0, limit) : rows;
 
-  const stats = React.useMemo(() => transactionStats(filter), [filter, storeTx]);
+  const stats = React.useMemo(() => {
+    void storeTx;
+    return transactionStats(filter);
+  }, [filter, storeTx]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={[]}>
@@ -59,7 +66,7 @@ export default function TransactionsScreen() {
           />
           {text ? (
             <Pressable onPress={() => setText('')}><Ionicons name="close-circle" size={16} color={colors.textMuted} /></Pressable>
-          ) : null}
+          ) : undefined}
           <Pressable onPress={() => setShowFilters((s) => !s)}>
             <Ionicons name="options" size={18} color={showFilters ? colors.accent : colors.textMuted} />
           </Pressable>
@@ -120,7 +127,7 @@ export default function TransactionsScreen() {
             <Text style={{ color: colors.textMuted, fontSize: 12, textAlign: 'center', paddingVertical: 16 }}>
               {stats.count} movimientos en total
             </Text>
-          ) : null
+          ) : undefined
         }
       />
 

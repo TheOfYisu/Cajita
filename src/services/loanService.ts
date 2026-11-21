@@ -18,8 +18,11 @@ export function createLoan(input: {
   name: string;
   type?: Loan['type'];
   counterpartyKind?: Loan['counterpartyKind'];
+  loanType?: string | null;
   total?: number;
   totalOffset?: number;
+  interestRate?: number | null;
+  installments?: number | null;
   personId?: number | null;
   startDate?: number;
   notes?: string;
@@ -28,10 +31,12 @@ export function createLoan(input: {
   const t = now();
   const uuid = genUuid();
   const kind = input.counterpartyKind ?? (input.personId ? 'person' : 'entity');
+  const loanType = input.loanType ?? 'libre_inversion';
   database.runSync(
-    `INSERT INTO loans (uuid, name, type, counterpartyKind, total, totalOffset, personId, startDate, notes, isArchived, createdAt, updatedAt, syncState)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 'pending')`,
-    [uuid, input.name, input.type ?? 'borrowed', kind, input.total ?? 0, input.totalOffset ?? 0,
+    `INSERT INTO loans (uuid, name, type, counterpartyKind, loanType, total, totalOffset, interestRate, installments, personId, startDate, notes, isArchived, createdAt, updatedAt, syncState)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 'pending')`,
+    [uuid, input.name, input.type ?? 'borrowed', kind, loanType, input.total ?? 0, input.totalOffset ?? 0,
+     input.interestRate ?? null, input.installments ?? null,
      input.personId ?? null, input.startDate ?? t, input.notes ?? '', t, t],
   );
   const row = database.getFirstSync<Loan>('SELECT * FROM loans WHERE uuid = ?', [uuid]);
@@ -43,7 +48,7 @@ export function updateLoan(id: number, input: Partial<Loan>): void {
   const t = now();
   const sets: string[] = [];
   const values: SQLiteBindParams = [];
-  const allowed = ['name', 'type', 'counterpartyKind', 'total', 'totalOffset', 'personId', 'startDate', 'notes', 'isArchived'] as const;
+  const allowed = ['name', 'type', 'counterpartyKind', 'loanType', 'total', 'totalOffset', 'interestRate', 'installments', 'personId', 'startDate', 'notes', 'isArchived'] as const;
   for (const k of allowed) {
     if (input[k] !== undefined) {
       sets.push(`${k} = ?`);

@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { AndroidImportance } from 'expo-notifications';
 import { getSubscriptions, nextOccurrences, frequencyLabel, getFixedForMonth } from './recurringService';
 import { getPerson } from './personService';
 import { getPrefs } from './prefsService';
@@ -27,7 +28,7 @@ export async function ensureNotificationPermissions(): Promise<boolean> {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('subscriptions', {
         name: 'Suscripciones y pagos',
-        importance: Notifications.AndroidImportance.HIGH,
+        importance: AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
       });
     }

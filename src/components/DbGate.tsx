@@ -1,5 +1,5 @@
 import React from "react";
-import { Animated, Easing, StyleSheet, View } from "react-native";
+import { Animated, Easing, Platform, StyleSheet, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { getDb, setDbKey } from "../db/database";
 import { ensureDbKey, ensureFreshEncryptedDb } from "../db/encryption";
@@ -64,7 +64,11 @@ export function DbGate({ children }: { children: React.ReactNode }) {
 
         if (cancelled) return;
         setProgress(0.55);
-        setStatusText("Verificando respaldo en iCloud…");
+        setStatusText(
+          Platform.OS === "ios"
+            ? "Verificando respaldo en iCloud…"
+            : "Verificando respaldo en la nube…",
+        );
 
         try {
           await restoreCloudBackupIfNeeded();

@@ -18,6 +18,7 @@ export default function CarteraScreen() {
   const { accounts, balances, loans, people, primaryAccountId } = useApp();
   const { colors, prefs } = useTheme();
   const hide = prefs.hideBalances;
+  const [today] = React.useState(() => Date.now());
 
   const borrowedEntity = loans.filter(
     (l) => l.type === "borrowed" && l.counterpartyKind !== "person",
@@ -140,7 +141,7 @@ export default function CarteraScreen() {
           />
           {cdts.map((a) => {
             const days = a.maturityDate
-              ? Math.ceil((a.maturityDate - Date.now()) / 86400000)
+              ? Math.ceil((a.maturityDate - today) / 86400000)
               : null;
             const matured = days != null && days <= 0;
             return (

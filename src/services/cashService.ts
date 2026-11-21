@@ -34,8 +34,8 @@ function windowEndFor(w: CashWithdrawal): number {
 }
 
 /** Gasto en efectivo imputado a un retiro: gastos de esa cuenta dentro de su ventana. */
-export function withdrawalSpent(w: CashWithdrawal): number {
-  const end = windowEndFor(w);
+export function withdrawalSpent(w: CashWithdrawal, knownEnd?: number): number {
+  const end = knownEnd !== undefined ? knownEnd : windowEndFor(w);
   const to = end === Number.POSITIVE_INFINITY ? Number.MAX_SAFE_INTEGER : end - 1;
   const row = getDb().getFirstSync<{ s: number }>(
     `SELECT COALESCE(SUM(ABS(amount)), 0) AS s FROM transactions
@@ -45,8 +45,8 @@ export function withdrawalSpent(w: CashWithdrawal): number {
   return row?.s ?? 0;
 }
 
-export function withdrawalExpenses(w: CashWithdrawal): Transaction[] {
-  const end = windowEndFor(w);
+export function withdrawalExpenses(w: CashWithdrawal, knownEnd?: number): Transaction[] {
+  const end = knownEnd !== undefined ? knownEnd : windowEndFor(w);
   const to = end === Number.POSITIVE_INFINITY ? Number.MAX_SAFE_INTEGER : end - 1;
   return getDb().getAllSync<Transaction>(
     `SELECT * FROM transactions
@@ -57,15 +57,29 @@ export function withdrawalExpenses(w: CashWithdrawal): Transaction[] {
 }
 
 export function toView(w: CashWithdrawal): WithdrawalView {
-  const spent = withdrawalSpent(w);
-  return { ...w, spent, remaining: w.amount - spent, windowEnd: windowEndFor(w) };
+  const windowEnd = windowEndFor(w);
+  const spent = withdrawalSpent(w, windowEnd);
+  return { ...w, spent, remaining: w.amount - spent, windowEnd };
 }
 
 /** Retiros activos (no cerrados y aún "abiertos": son el más reciente de su cuenta). */
 export function activeWithdrawals(): WithdrawalView[] {
-  return getWithdrawals(false)
-    .map(toView)
-    .filter((w) => w.windowEnd === Number.POSITIVE_INFINITY);
+  const db = getDb();
+  // Obtiene directamente los retiros activos (el más reciente no cerrado por cuenta)
+  const rows = db.getAllSync<CashWithdrawal>(
+    `SELECT w1.* FROM cash_withdrawals w1
+     WHERE w1.deletedAt IS NULL AND w1.closedAt IS NULL
+       AND NOT EXISTS (
+         SELECT 1 FROM cash_withdrawals w2
+         WHERE w2.deletedAt IS NULL AND w2.accountId = w1.accountId AND w2.id != w1.id
+           AND (w2.date > w1.date OR (w2.date = w1.date AND w2.id > w1.id))
+       )
+     ORDER BY w1.date DESC`,
+  );
+  return rows.map((w) => {
+    const spent = withdrawalSpent(w, Number.POSITIVE_INFINITY);
+    return { ...w, spent, remaining: w.amount - spent, windowEnd: Number.POSITIVE_INFINITY };
+  });
 }
 
 export function allWithdrawalViews(): WithdrawalView[] {
@@ -172,10 +186,11 @@ export function lastMonthLeftover(): number {
   const prev = monthRange(monthStartDay, prevRef);
   let leftover = 0;
   for (const w of getWithdrawals(true)) {
+    if (w.date > prev.to) continue;
     const end = windowEndFor(w);
     const effEnd = end === Number.POSITIVE_INFINITY ? (w.closedAt ?? Number.POSITIVE_INFINITY) : end;
     if (effEnd >= prev.from && effEnd <= prev.to) {
-      leftover += w.amount - withdrawalSpent(w);
+      leftover += w.amount - withdrawalSpent(w, end);
     }
   }
   return leftover;

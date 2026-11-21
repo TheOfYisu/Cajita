@@ -4,19 +4,24 @@ import { File, Paths } from "expo-file-system";
 import { requireNativeModule } from "expo-modules-core";
 import { getDb, setOnDbWrite, closeDbForRestore } from "../db/database";
 import type { SQLiteDatabase } from "expo-sqlite";
+import {
+  isGoogleDriveConnected,
+  googleDriveFileExists,
+  uploadToGoogleDrive,
+  downloadFromGoogleDrive,
+  getGoogleDriveAccount,
+} from "./googleDriveService";
 
 /**
- * Copia de seguridad automática en iCloud.
+ * Copia de seguridad automática en la nube (iCloud en iOS / Google Drive en Android).
  *
  * Estrategia:
  *  - La fuente de verdad es `cajita.db`, cifrada con SQLCipher en el dispositivo.
  *  - Cada escritura a la BD (vía `getDb().runSync`) dispara un backup con debounce.
  *  - El backup hace un `wal_checkpoint(TRUNCATE)` y copia el archivo cifrado tal cual
- *    al contenedor de ubiquity de iCloud (módulo nativo `CajitaCloudSync`).
- *  - Al arrancar, si la BD local está vacía o no existe y hay un backup en iCloud,
+ *    a la nube (contenedor iCloud en iOS / appDataFolder en Google Drive en Android).
+ *  - Al arrancar, si la BD local está vacía o no existe y hay un backup en la nube,
  *    se restaura automáticamente (caso: celular nuevo / reinstalación).
- *
- * Solo funciona en iOS con build nativa (expo prebuild / EAS). En Android y web no-op.
  */
 
 const REMOTE_NAME = "cajita.db";
@@ -56,8 +61,6 @@ function dbFile(): File {
 /**
  * Conecta el hook de escrituras de la BD con el backup y flushea al pasar la app
  * a segundo plano. Llamar una vez al arranque, tras `setDbKey`.
- *
- * El backup automático está disponible para todos los usuarios.
  */
 export function initCloudBackup(): void {
   if (initialized) return;
@@ -74,7 +77,7 @@ export function initCloudBackup(): void {
 
 /** Agenda un backup tras cada escritura; coalesce ráfagas de cambios. */
 export function scheduleCloudBackup(db: SQLiteDatabase): void {
-  if (Platform.OS !== "ios") return;
+  if (Platform.OS !== "ios" && Platform.OS !== "android") return;
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     debounceTimer = null;
@@ -104,29 +107,28 @@ export interface BackupResult {
 }
 
 /**
- * Sube el snapshot cifrado de la BD al contenedor iCloud.
+ * Sube el snapshot cifrado de la BD a la nube (iCloud en iOS / Google Drive en Android).
  * Protección: nunca pisa un backup remoto existente con una BD local vacía
  * (p. ej. una reinstalación sin restaurar todavía).
  */
 export async function backupNow(db: SQLiteDatabase): Promise<BackupResult> {
-  if (Platform.OS !== "ios") return { ok: false, reason: "not-ios" };
+  if (Platform.OS === "web") return { ok: false, reason: "web-not-supported" };
   if (running) return { ok: true, reason: "in-progress" };
-  const mod = getNative();
-  if (!mod) return { ok: false, reason: "no-native" };
   running = true;
+
   try {
-    if (!(await mod.isCloudAvailable()))
-      return { ok: false, reason: "icloud-unavailable" };
-    if ((await isLocalDbEmpty()) && (await mod.cloudFileExists(REMOTE_NAME))) {
-      return { ok: false, reason: "empty-local-with-backup" };
-    }
+    const isLocalEmpty = await isLocalDbEmpty();
+
+    // Snapshot consistente de WAL
     try {
       db.execSync("PRAGMA wal_checkpoint(TRUNCATE)");
     } catch {
       /* ignora */
     }
+
     const src = dbFile();
     if (!src.exists) return { ok: false, reason: "no-db" };
+
     const dst = new File(Paths.cache, CACHE_NAME);
     try {
       if (dst.exists) dst.delete();
@@ -134,7 +136,25 @@ export async function backupNow(db: SQLiteDatabase): Promise<BackupResult> {
       /* ignora */
     }
     src.copy(dst);
-    await mod.upload(dst.uri, REMOTE_NAME);
+
+    if (Platform.OS === "ios") {
+      const mod = getNative();
+      if (!mod) return { ok: false, reason: "no-native" };
+      if (!(await mod.isCloudAvailable())) return { ok: false, reason: "icloud-unavailable" };
+      if (isLocalEmpty && (await mod.cloudFileExists(REMOTE_NAME))) {
+        return { ok: false, reason: "empty-local-with-backup" };
+      }
+      await mod.upload(dst.uri, REMOTE_NAME);
+    } else if (Platform.OS === "android") {
+      const connected = await isGoogleDriveConnected();
+      if (!connected) return { ok: false, reason: "gdrive-not-connected" };
+      if (isLocalEmpty && (await googleDriveFileExists(REMOTE_NAME))) {
+        return { ok: false, reason: "empty-local-with-backup" };
+      }
+      const res = await uploadToGoogleDrive(dst, REMOTE_NAME);
+      if (!res.ok) return { ok: false, reason: res.reason };
+    }
+
     await SecureStore.setItemAsync(LAST_BACKUP_KEY, String(Date.now()));
     return { ok: true, reason: "ok" };
   } catch (e) {
@@ -155,39 +175,61 @@ export async function getLastBackupAt(): Promise<number | null> {
 }
 
 export async function isCloudBackupAvailable(): Promise<boolean> {
-  const mod = getNative();
-  if (!mod) return false;
-  try {
-    return (
-      (await mod.isCloudAvailable()) && (await mod.cloudFileExists(REMOTE_NAME))
-    );
-  } catch {
-    return false;
+  if (Platform.OS === "ios") {
+    const mod = getNative();
+    if (!mod) return false;
+    try {
+      return (await mod.isCloudAvailable()) && (await mod.cloudFileExists(REMOTE_NAME));
+    } catch {
+      return false;
+    }
+  } else if (Platform.OS === "android") {
+    try {
+      return (await isGoogleDriveConnected()) && (await googleDriveFileExists(REMOTE_NAME));
+    } catch {
+      return false;
+    }
   }
+  return false;
 }
 
 /**
  * Restauración automática al arranque. Solo actúa cuando la BD local está vacía o
- * no existe (celular nuevo / reinstalación) y existe un backup en iCloud.
+ * no existe (celular nuevo / reinstalación) y existe un backup en la nube.
  */
 export async function restoreCloudBackupIfNeeded(): Promise<{
   restored: boolean;
   reason: string;
 }> {
-  if (Platform.OS !== "ios") return { restored: false, reason: "not-ios" };
-  const mod = getNative();
-  if (!mod) return { restored: false, reason: "no-native" };
+  if (Platform.OS !== "ios" && Platform.OS !== "android") {
+    return { restored: false, reason: "unsupported-platform" };
+  }
+
   try {
-    if (!(await mod.isCloudAvailable()))
-      return { restored: false, reason: "icloud-unavailable" };
-    if (!(await mod.cloudFileExists(REMOTE_NAME)))
-      return { restored: false, reason: "no-cloud-backup" };
     const local = dbFile();
-    if (local.exists && !(await isLocalDbEmpty()))
+    if (local.exists && !(await isLocalDbEmpty())) {
       return { restored: false, reason: "local-has-data" };
-    closeDbForRestore();
-    await mod.download(REMOTE_NAME, dbFile().uri);
-    return { restored: true, reason: "ok" };
+    }
+
+    if (Platform.OS === "ios") {
+      const mod = getNative();
+      if (!mod) return { restored: false, reason: "no-native" };
+      if (!(await mod.isCloudAvailable())) return { restored: false, reason: "icloud-unavailable" };
+      if (!(await mod.cloudFileExists(REMOTE_NAME))) return { restored: false, reason: "no-cloud-backup" };
+
+      closeDbForRestore();
+      await mod.download(REMOTE_NAME, dbFile().uri);
+      return { restored: true, reason: "ok" };
+    } else {
+      const connected = await isGoogleDriveConnected();
+      if (!connected) return { restored: false, reason: "gdrive-not-connected" };
+      if (!(await googleDriveFileExists(REMOTE_NAME))) return { restored: false, reason: "no-cloud-backup" };
+
+      closeDbForRestore();
+      const res = await downloadFromGoogleDrive(REMOTE_NAME, dbFile());
+      if (!res.ok) return { restored: false, reason: res.reason };
+      return { restored: true, reason: "ok" };
+    }
   } catch (e) {
     return {
       restored: false,
@@ -197,24 +239,37 @@ export async function restoreCloudBackupIfNeeded(): Promise<{
 }
 
 /**
- * Restauración manual desde Ajustes. Reemplaza la BD local por la de iCloud
+ * Restauración manual desde Ajustes. Reemplaza la BD local por la de la nube
  * (cierra la conexión primero). El llamador debe refrescar la app tras esto.
  */
 export async function restoreCloudBackupNow(): Promise<{
   restored: boolean;
   reason: string;
 }> {
-  if (Platform.OS !== "ios") return { restored: false, reason: "not-ios" };
-  const mod = getNative();
-  if (!mod) return { restored: false, reason: "no-native" };
+  if (Platform.OS !== "ios" && Platform.OS !== "android") {
+    return { restored: false, reason: "unsupported-platform" };
+  }
+
   try {
-    if (!(await mod.isCloudAvailable()))
-      return { restored: false, reason: "icloud-unavailable" };
-    if (!(await mod.cloudFileExists(REMOTE_NAME)))
-      return { restored: false, reason: "no-cloud-backup" };
-    closeDbForRestore();
-    await mod.download(REMOTE_NAME, dbFile().uri);
-    return { restored: true, reason: "ok" };
+    if (Platform.OS === "ios") {
+      const mod = getNative();
+      if (!mod) return { restored: false, reason: "no-native" };
+      if (!(await mod.isCloudAvailable())) return { restored: false, reason: "icloud-unavailable" };
+      if (!(await mod.cloudFileExists(REMOTE_NAME))) return { restored: false, reason: "no-cloud-backup" };
+
+      closeDbForRestore();
+      await mod.download(REMOTE_NAME, dbFile().uri);
+      return { restored: true, reason: "ok" };
+    } else {
+      const connected = await isGoogleDriveConnected();
+      if (!connected) return { restored: false, reason: "gdrive-not-connected" };
+      if (!(await googleDriveFileExists(REMOTE_NAME))) return { restored: false, reason: "no-cloud-backup" };
+
+      closeDbForRestore();
+      const res = await downloadFromGoogleDrive(REMOTE_NAME, dbFile());
+      if (!res.ok) return { restored: false, reason: res.reason };
+      return { restored: true, reason: "ok" };
+    }
   } catch (e) {
     return {
       restored: false,
@@ -222,3 +277,5 @@ export async function restoreCloudBackupNow(): Promise<{
     };
   }
 }
+
+export { getGoogleDriveAccount };
