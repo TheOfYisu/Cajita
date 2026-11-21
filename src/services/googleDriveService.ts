@@ -23,6 +23,11 @@ export const DEFAULT_GOOGLE_CLIENT_ID =
   (Constants.expoConfig?.extra?.googleClientId as string | undefined) ||
   "";
 
+// Redirect URI configurado para la app web puente (GitHub Pages o dominio propio)
+export const DEFAULT_GOOGLE_REDIRECT_URI =
+  process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI ||
+  "https://theofyisu.github.io/Cajita/oauth/google/";
+
 const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_DRIVE_API_BASE = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_BASE = "https://www.googleapis.com/upload/drive/v3";
@@ -82,7 +87,7 @@ export async function connectGoogleDrive(customClientId?: string): Promise<{ ok:
       };
     }
 
-    const redirectUri = "https://cajita.app/oauth/google";
+    const redirectUri = DEFAULT_GOOGLE_REDIRECT_URI;
     const returnUrl = "cajita://oauth/google";
     const authUrl = `${GOOGLE_AUTH_ENDPOINT}?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
 
