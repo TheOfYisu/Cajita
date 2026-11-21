@@ -43,7 +43,7 @@ Componentes:
 1. **Apple Developer (iOS)**: en el App ID `com.cajita.app` activar la capacidad **iCloud**
    y registrar el contenedor **`iCloud.com.cajita.app`**; regenerar el provisioning profile.
 2. **Google Cloud Console (Android)**: crear credenciales OAuth 2.0 Web Client ID con el
-   redirect URI `https://cajita.app/oauth/google` para conectar Google Drive.
+   redirect URI `https://theofyisu.github.io/Cajita/oauth/google/` para conectar Google Drive.
 3. **Proyecto iOS**: se genera en macOS (`npx expo prebuild -p ios`) o en CI
    (Codemagic/EAS ya corren `expo prebuild`). **Windows no genera `ios/`**.
 4. **iCloud Keychain activado** en el dispositivo del usuario con el mismo Apple ID:
