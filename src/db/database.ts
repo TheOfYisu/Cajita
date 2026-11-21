@@ -8,6 +8,7 @@ export interface Account {
   type: 'bank' | 'cash' | 'credit_card' | 'savings' | 'cajita' | 'cdt' | 'debt' | 'loan';
   currency: string;
   creditLimit: number | null;
+  interestRate?: number | null;
   color: string;
   icon: string;
   isPrimary: boolean;
@@ -51,6 +52,8 @@ export interface Transaction {
   categoryUuid: string | null;
   loanId: number | null;
   loanUuid: string | null;
+  installments?: number | null;
+  interestRate?: number | null;
   date: number;
   createdAt: number;
   updatedAt: number;
@@ -64,8 +67,11 @@ export interface Loan {
   name: string;
   type: 'borrowed' | 'lent';
   counterpartyKind: 'entity' | 'person';
+  loanType?: string | null;
   total: number;
   totalOffset: number;
+  interestRate?: number | null;
+  installments?: number | null;
   personId: number | null;
   startDate: number;
   notes: string;
@@ -429,6 +435,9 @@ function initSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
     CREATE INDEX IF NOT EXISTS idx_transactions_sync ON transactions(syncState);
     CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(categoryId);
+    CREATE INDEX IF NOT EXISTS idx_transactions_loan ON transactions(loanId) WHERE deletedAt IS NULL AND loanId IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_transactions_active_acc ON transactions(accountId, amount) WHERE deletedAt IS NULL;
+    CREATE INDEX IF NOT EXISTS idx_transactions_active_date ON transactions(date, type, amount) WHERE deletedAt IS NULL;
   `);
 
   // Migraciones seguras para bases de datos que ya existían sin estas columnas.
@@ -449,6 +458,12 @@ function initSchema(): void {
   ensureColumn('accounts', 'linkedAccountId', 'linkedAccountId INTEGER');
   ensureColumn('accounts', 'excludeFromTotals', 'excludeFromTotals INTEGER NOT NULL DEFAULT 0');
   ensureColumn('loans', 'counterpartyKind', "counterpartyKind TEXT NOT NULL DEFAULT 'entity'");
+  ensureColumn('loans', 'loanType', "loanType TEXT NOT NULL DEFAULT 'libre_inversion'");
+  ensureColumn('loans', 'interestRate', 'interestRate REAL');
+  ensureColumn('loans', 'installments', 'installments INTEGER');
+  ensureColumn('transactions', 'installments', 'installments INTEGER');
+  ensureColumn('transactions', 'interestRate', 'interestRate REAL');
+  ensureColumn('accounts', 'interestRate', 'interestRate REAL');
   ensureColumn('recurring', 'kind', "kind TEXT NOT NULL DEFAULT 'subscription'");
   ensureColumn('recurring', 'variableAmount', 'variableAmount INTEGER NOT NULL DEFAULT 0');
   ensureColumn('recurring', 'dueDay', 'dueDay INTEGER');
@@ -482,6 +497,25 @@ export function accountBalance(accountId: number): number {
   return row?.balance ?? 0;
 }
 
+/**
+ * Devuelve un mapa { [accountId]: balance } en una sola consulta agrupada.
+ * Evita el problema de consultas N+1 en pantallas principales y providers.
+ */
+export function allAccountBalances(): Record<number, number> {
+  const database = getDb();
+  const rows = database.getAllSync<{ accountId: number; balance: number }>(
+    `SELECT accountId, COALESCE(SUM(amount), 0) AS balance
+     FROM transactions
+     WHERE deletedAt IS NULL
+     GROUP BY accountId`,
+  );
+  const map: Record<number, number> = {};
+  for (const r of rows) {
+    map[r.accountId] = r.balance;
+  }
+  return map;
+}
+
 export function loanBalance(loanId: number): number {
   const database = getDb();
   const loan = database.getFirstSync<Loan>('SELECT * FROM loans WHERE id = ?', [loanId]);
@@ -496,6 +530,24 @@ export function loanBalance(loanId: number): number {
   // lent: reembolsos son ingresos (amount positivo) -> reducen lo que te deben.
   if (loan.type === 'borrowed') return loan.total + loan.totalOffset + flow;
   return loan.total + loan.totalOffset - flow;
+}
+
+/**
+ * Devuelve el flujo agregado de movimientos para todos los préstamos en una sola consulta.
+ */
+export function allLoanFlows(): Record<number, number> {
+  const database = getDb();
+  const rows = database.getAllSync<{ loanId: number; flow: number }>(
+    `SELECT loanId, COALESCE(SUM(amount), 0) AS flow
+     FROM transactions
+     WHERE deletedAt IS NULL AND loanId IS NOT NULL
+     GROUP BY loanId`,
+  );
+  const flows: Record<number, number> = {};
+  for (const r of rows) {
+    flows[r.loanId] = r.flow;
+  }
+  return flows;
 }
 
 export interface CategorySpend {

@@ -1,20 +1,77 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Alert, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
-import { ModalScreen, Card, Button, EmptyState, ProgressBar, StatusBadge, formatMoney } from '@/src/components/ui';
+import { ModalScreen, Card, Button, EmptyState, ProgressBar, StatusBadge, formatMoney, parseCurrencyInput } from '@/src/components/ui';
 import { allWithdrawalViews } from '@/src/services/cashService';
+import { createTransaction } from '@/src/services/transactionService';
 
 export default function CashListScreen() {
-  const { cash } = useApp();
+  const { cash, accounts, refresh } = useApp();
   const { colors, prefs } = useTheme();
   const hide = prefs.hideBalances;
   const list = allWithdrawalViews();
 
   const active = list.filter((w) => w.windowEnd === Number.POSITIVE_INFINITY && !w.closedAt);
   const past = list.filter((w) => !(w.windowEnd === Number.POSITIVE_INFINITY && !w.closedAt));
+
+  const onSquareWallet = () => {
+    const cashAccount = accounts.find((a) => a.type === 'cash') ?? accounts[0];
+    if (!cashAccount) {
+      Alert.alert('No se encontró una cuenta de efectivo');
+      return;
+    }
+
+    Alert.prompt(
+      'Cuadrar billetera',
+      `Actualmente la app registra ${formatMoney(cash.totalRemaining, prefs.currency)} en efectivo.\n\n¿Cuánto dinero tienes físicamente en tu billetera ahora?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Ajustar',
+          onPress: (val) => {
+            const actual = parseCurrencyInput(val);
+            if (isNaN(actual) || actual < 0) {
+              Alert.alert('Monto inválido');
+              return;
+            }
+            const diff = actual - cash.totalRemaining;
+            if (Math.abs(diff) < 1) {
+              Alert.alert('¡Tu billetera ya está cuadrada!');
+              return;
+            }
+
+            if (diff < 0) {
+              // Gastos hormiga o no anotados
+              createTransaction({
+                title: 'Gastos varios en efectivo (ajuste de billetera)',
+                amount: -Math.abs(diff),
+                type: 'expense',
+                accountId: cashAccount.id,
+                accountUuid: cashAccount.uuid,
+                date: Date.now(),
+              });
+            } else {
+              // Entrada extra no registrada
+              createTransaction({
+                title: 'Ajuste de efectivo en billetera',
+                amount: Math.abs(diff),
+                type: 'balance_correction',
+                accountId: cashAccount.id,
+                accountUuid: cashAccount.uuid,
+                date: Date.now(),
+              });
+            }
+            refresh();
+            Alert.alert('Billetera cuadrada', `Saldo en efectivo actualizado a ${formatMoney(actual, prefs.currency)}.`);
+          },
+        },
+      ],
+      'plain-text',
+    );
+  };
 
   return (
     <ModalScreen
@@ -29,11 +86,33 @@ export default function CashListScreen() {
         />
       ) : (
         <>
-          <Card style={{ marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={{ color: colors.text, fontWeight: '700' }}>Efectivo en mano</Text>
-            <Text style={{ color: colors.text, fontWeight: '800' }}>
-              {formatMoney(cash.totalRemaining, prefs.currency, hide)}
-            </Text>
+          <Card style={{ marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
+                <Text style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600' }}>Efectivo en mano</Text>
+                <Text style={{ color: colors.text, fontSize: 24, fontWeight: '900', marginTop: 2 }}>
+                  {formatMoney(cash.totalRemaining, prefs.currency, hide)}
+                </Text>
+              </View>
+              <Pressable
+                onPress={onSquareWallet}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: colors.surfaceAlt,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Ionicons name="wallet-outline" size={16} color={colors.accent} />
+                <Text style={{ color: colors.text, fontSize: 12, fontWeight: '700' }}>Cuadrar</Text>
+              </Pressable>
+            </View>
           </Card>
 
           {active.length > 0 ? (

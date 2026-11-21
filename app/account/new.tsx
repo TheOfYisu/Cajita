@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
-import { ModalScreen, Card, Field, Button, Label, PickRow, ColorPicker, IconPicker, Toggle } from '@/src/components/ui';
+import { ModalScreen, Card, Field, Button, Label, PickRow, ColorPicker, IconPicker, Toggle, parseCurrencyInput } from '@/src/components/ui';
 import { DateField } from '@/src/components/DateField';
 import { ACCOUNT_ICONS, IconName, SWATCHES, safeIcon } from '@/src/theme';
 import { createAccount } from '@/src/services/accountService';
@@ -51,14 +51,14 @@ export default function NewAccountScreen() {
       type,
       color,
       icon,
-      creditLimit: type === 'credit_card' && creditLimit ? parseFloat(creditLimit) : null,
+      creditLimit: type === 'credit_card' && creditLimit ? parseCurrencyInput(creditLimit) : null,
       maturityDate: type === 'cdt' ? maturity : null,
-      expectedYield: type === 'cdt' && yieldAmount ? parseFloat(yieldAmount.replace(/[^\d.]/g, '')) : null,
+      expectedYield: type === 'cdt' && yieldAmount ? parseCurrencyInput(yieldAmount) : null,
       linkedAccountId: type === 'cdt' ? linkedAccount : null,
       excludeFromTotals: excludeTotals,
       isPrimary: isPrimary && (type === 'bank' || type === 'savings'),
     });
-    const init = parseFloat(initial);
+    const init = initial ? parseCurrencyInput(initial) : 0;
     if (init && Number.isFinite(init)) {
       balanceCorrection({ accountId: a.id, accountUuid: a.uuid, amount: init, title: 'Saldo inicial' });
     }

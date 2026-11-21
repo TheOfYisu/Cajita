@@ -15,7 +15,7 @@ export default function NewTransferScreen() {
   const [title, setTitle] = React.useState('');
   const [fromId, setFromId] = React.useState<number | null>(null);
   const [toId, setToId] = React.useState<number | null>(null);
-  const [date, setDate] = React.useState<number>(Date.now());
+  const [date, setDate] = React.useState<number>(() => Date.now());
 
   const opts = (list: typeof accounts): SelectOption<number>[] =>
     list.map((a) => ({ value: a.id, label: a.name, icon: safeIcon(a.icon), color: a.color }));

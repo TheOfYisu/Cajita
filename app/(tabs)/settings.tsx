@@ -6,6 +6,9 @@ import {
   Alert,
   Pressable,
   Platform,
+  Modal,
+  ScrollView,
+  KeyboardAvoidingView,
 } from "react-native";
 import { Image } from "expo-image";
 import Constants from "expo-constants";
@@ -14,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { useApp } from "@/src/store/appStore";
 import { useTheme } from "@/src/theme/ThemeProvider";
-import { Screen, Card, Divider } from "@/src/components/ui";
+import { Screen, Card, Divider, Button } from "@/src/components/ui";
 import { IconName, ACCENT_COLORS } from "@/src/theme";
 import { getPendingCounts, exportBackup } from "@/src/services/syncService";
 import { exportTransactionsCsv } from "@/src/services/transactionService";
@@ -25,7 +28,37 @@ import {
   restoreCloudBackupNow,
   getLastBackupAt,
   isCloudBackupAvailable,
+  getGoogleDriveAccount,
 } from "@/src/services/cloudBackupService";
+import {
+  connectGoogleDrive,
+  disconnectGoogleDrive,
+} from "@/src/services/googleDriveService";
+
+const getBackupErrorMessage = (reason: string): string => {
+  switch (reason) {
+    case "empty-local-with-backup":
+      return "Tu base de datos local está vacía y ya existe una copia de seguridad en la nube. Para evitar sobrescribirla con datos en blanco, restaura tu copia primero.";
+    case "icloud-unavailable":
+      return "iCloud no está disponible. Asegúrate de haber iniciado sesión con tu Apple ID y tener iCloud Drive activado en los Ajustes de tu iPhone.";
+    case "gdrive-not-connected":
+      return "Google Drive no está conectado. Conecta tu cuenta de Google para activar el respaldo automático.";
+    case "missing-client-id":
+      return "No se ha configurado el Client ID de Google. Puedes ingresarlo en Ajustes para conectar Google Drive.";
+    case "cancelled":
+      return "El inicio de sesión con Google fue cancelado.";
+    case "not-ios":
+      return "La copia de seguridad en iCloud solo está disponible en dispositivos iOS.";
+    case "no-native":
+      return "El módulo nativo no está disponible en este entorno.";
+    case "no-db":
+      return "No se encontró el archivo de la base de datos local para respaldar.";
+    case "in-progress":
+      return "Ya hay una copia de seguridad en curso.";
+    default:
+      return `No se pudo subir: ${reason}`;
+  }
+};
 
 export default function SettingsScreen() {
   const { colors, prefs } = useTheme();
@@ -37,11 +70,22 @@ export default function SettingsScreen() {
 
   const [lastBackup, setLastBackup] = React.useState<number | null>(null);
   const [hasCloudBackup, setHasCloudBackup] = React.useState(false);
+  const [gdriveEmail, setGdriveEmail] = React.useState<string | null>(null);
+  const [gdriveConnected, setGdriveConnected] = React.useState(false);
+
+  // Modal de Google Drive
+  const [gdriveModalVisible, setGdriveModalVisible] = React.useState(false);
+  const [isConnecting, setIsConnecting] = React.useState(false);
 
   React.useEffect(() => {
-    if (Platform.OS !== "ios") return;
     void getLastBackupAt().then(setLastBackup);
     void isCloudBackupAvailable().then(setHasCloudBackup);
+    if (Platform.OS === "android") {
+      void getGoogleDriveAccount().then((acc) => {
+        setGdriveConnected(acc.connected);
+        setGdriveEmail(acc.email);
+      });
+    }
   }, []);
 
   const onBackup = async () => {
@@ -50,21 +94,83 @@ export default function SettingsScreen() {
       const t = await getLastBackupAt();
       setLastBackup(t);
       setHasCloudBackup(true);
+      const targetName = Platform.OS === "ios" ? "iCloud" : "Google Drive";
       Alert.alert(
         "Copia de seguridad",
         res.ok
-          ? `Backup subido a iCloud (${t ? new Date(t).toLocaleTimeString("es-CO") : "ahora"}). Se hace automáticamente en cada cambio.`
-          : `No se pudo subir: ${res.reason}`,
+          ? `Backup subido a ${targetName} (${t ? new Date(t).toLocaleTimeString("es-CO") : "ahora"}). Se hace automáticamente en cada cambio.`
+          : getBackupErrorMessage(res.reason),
       );
     } catch (e) {
       Alert.alert("Error", String(e));
     }
   };
 
-  const onRestore = () => {
+  const onOpenGoogleDriveModal = () => {
+    setGdriveModalVisible(true);
+  };
+
+  const handleConnectOAuth = async () => {
+    setIsConnecting(true);
+    try {
+      const res = await connectGoogleDrive();
+      if (res.ok) {
+        const acc = await getGoogleDriveAccount();
+        setGdriveConnected(acc.connected);
+        setGdriveEmail(acc.email);
+        setGdriveModalVisible(false);
+        Alert.alert(
+          "Google Drive conectado",
+          `Cuenta vinculada: ${acc.email ?? "con éxito"}. Se iniciará el respaldo automático.`,
+        );
+        void onBackup();
+      } else {
+        if (res.reason === "missing-client-id") {
+          Alert.alert(
+            "Configuración pendiente",
+            "La integración con Google Drive aún no ha sido configurada para esta versión de la app.",
+          );
+        } else {
+          Alert.alert(
+            "No se pudo conectar",
+            getBackupErrorMessage(res.reason ?? "error"),
+          );
+        }
+      }
+    } catch (e) {
+      Alert.alert("Error de conexión", String(e));
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const onDisconnectGoogleDrive = () => {
     Alert.alert(
-      "Restaurar desde iCloud",
-      "Se reemplazará la base de datos actual con la copia guardada en iCloud. ¿Continuar?",
+      "Desconectar Google Drive",
+      "¿Deseas desvincular tu cuenta de Google Drive? Los respaldos automáticos se pausarán.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Desconectar",
+          style: "destructive",
+          onPress: async () => {
+            await disconnectGoogleDrive();
+            setGdriveConnected(false);
+            setGdriveEmail(null);
+            setHasCloudBackup(false);
+            setGdriveModalVisible(false);
+            Alert.alert("Desconectado", "Se ha desvinculado Google Drive.");
+          },
+        },
+      ],
+    );
+  };
+
+  const onRestore = () => {
+    const cloudName = Platform.OS === "ios" ? "iCloud" : "Google Drive";
+    Alert.alert(
+      `Restaurar desde ${cloudName}`,
+      `Se reemplazará la base de datos actual con la copia guardada en ${cloudName}. ¿Continuar?`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -75,7 +181,7 @@ export default function SettingsScreen() {
               const res = await restoreCloudBackupNow();
               if (res.restored) {
                 refresh();
-                Alert.alert("Restaurado", "Datos recuperados desde iCloud.");
+                Alert.alert("Restaurado", `Datos recuperados desde ${cloudName}.`);
               } else {
                 Alert.alert("No se pudo restaurar", res.reason);
               }
@@ -166,16 +272,18 @@ export default function SettingsScreen() {
           hint: "Streaming, gimnasio, arriendo, servicios de casa…",
           onPress: () => router.push("/settings/recurring"),
         },
-        ...(Platform.OS === "ios"
-          ? [
-              {
-                icon: "flash" as const,
-                label: "Acciones y Atajos de iOS",
-                hint: "Botón de Acción · Doble toque atrás · Siri · Quick Actions",
-                onPress: () => router.push("/settings/shortcuts"),
-              },
-            ]
-          : []),
+        {
+          icon: "flash",
+          label:
+            Platform.OS === "ios"
+              ? "Acciones y Atajos de iOS"
+              : "Atajos y Acciones Rápidas",
+          hint:
+            Platform.OS === "ios"
+              ? "Botón de Acción · Doble toque atrás · Siri · Quick Actions"
+              : "Menú al pulsar ícono · Accesos directos · Gestos",
+          onPress: () => router.push("/settings/shortcuts"),
+        },
         {
           icon: "notifications",
           label: "Notificaciones",
@@ -229,7 +337,41 @@ export default function SettingsScreen() {
                 onPress: onRestore,
               },
             ]
-          : []),
+          : Platform.OS === "android"
+            ? [
+                ...(gdriveConnected
+                  ? [
+                      {
+                        icon: "cloud-download" as IconName,
+                        label: "Restaurar desde Google Drive",
+                        hint: hasCloudBackup
+                          ? "Reemplaza los datos con el backup guardado"
+                          : "No hay backup en Google Drive todavía",
+                        onPress: onRestore,
+                      },
+                      {
+                        icon: "settings-outline" as IconName,
+                        label: "Ajustes de Google Drive",
+                        hint: gdriveEmail ?? "Gestionar cuenta",
+                        onPress: onOpenGoogleDriveModal,
+                      },
+                      {
+                        icon: "log-out-outline" as IconName,
+                        label: "Desconectar Google Drive",
+                        hint: "Desvincular cuenta",
+                        onPress: onDisconnectGoogleDrive,
+                      },
+                    ]
+                  : [
+                      {
+                        icon: "logo-google" as IconName,
+                        label: "Conectar Google Drive",
+                        hint: "Activa la copia de seguridad automática en Android",
+                        onPress: onOpenGoogleDriveModal,
+                      },
+                    ]),
+              ]
+            : []),
       ],
     },
     {
@@ -338,6 +480,50 @@ export default function SettingsScreen() {
             />
           </View>
         </Card>
+      ) : Platform.OS === "android" ? (
+        <Card
+          onPress={gdriveConnected ? onBackup : onOpenGoogleDriveModal}
+          style={{ marginBottom: 16 }}
+        >
+          <View
+            style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+          >
+            <Ionicons
+              name={gdriveConnected ? "cloud-upload-outline" : "logo-google"}
+              size={24}
+              color={colors.transfer}
+            />
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{ color: colors.text, fontWeight: "700", fontSize: 15 }}
+              >
+                Copia de seguridad Google Drive
+              </Text>
+              <Text
+                style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}
+              >
+                {gdriveConnected
+                  ? lastBackup
+                    ? `Último backup: ${new Date(lastBackup).toLocaleString("es-CO")}`
+                    : "Sin backup todavía"
+                  : "No conectado · Toca para vincular tu cuenta"}
+                {totalPending > 0 && gdriveConnected ? ` · ${totalPending} cambios pendientes` : ""}
+              </Text>
+              <Text
+                style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}
+              >
+                {gdriveConnected
+                  ? `${gdriveEmail ?? "Google Drive"} · Automática en cada cambio · toca para subir ahora`
+                  : "Respaldo automático seguro en la nube de Google"}
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={colors.textMuted}
+            />
+          </View>
+        </Card>
       ) : null}
 
       {sections.map((s) => (
@@ -377,6 +563,123 @@ export default function SettingsScreen() {
       >
         v{Constants.expoConfig?.version ?? "1.0.10"}
       </Text>
+
+      {/* Modal de Google Drive (Cross-Platform) */}
+      <Modal
+        visible={gdriveModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => {
+          if (!isConnecting) setGdriveModalVisible(false);
+        }}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalBackdrop}
+        >
+          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <Ionicons name="logo-google" size={24} color={colors.transfer} />
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  Google Drive
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => !isConnecting && setGdriveModalVisible(false)}
+                hitSlop={8}
+                style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+              >
+                <Ionicons name="close" size={22} color={colors.textMuted} />
+              </Pressable>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 480 }}>
+              <Text style={[styles.modalDescription, { color: colors.textMuted }]}>
+                Copia de seguridad automática y cifrada en tu cuenta personal de Google Drive (carpeta privada appData).
+              </Text>
+
+              {gdriveConnected ? (
+                <View style={{ gap: 14 }}>
+                  <View
+                    style={[
+                      styles.connectedBadge,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                    ]}
+                  >
+                    <Ionicons name="checkmark-circle" size={20} color={colors.positive} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: colors.text, fontWeight: "700", fontSize: 14 }}>
+                        Cuenta vinculada
+                      </Text>
+                      <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}>
+                        {gdriveEmail ?? "Google Drive"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={{ gap: 8 }}>
+                    <Button
+                      title="Subir copia de seguridad ahora"
+                      icon="cloud-upload"
+                      onPress={async () => {
+                        setGdriveModalVisible(false);
+                        await onBackup();
+                      }}
+                    />
+                    <Button
+                      title="Restaurar copia desde Google Drive"
+                      icon="cloud-download"
+                      variant="secondary"
+                      onPress={() => {
+                        setGdriveModalVisible(false);
+                        onRestore();
+                      }}
+                    />
+                    <Button
+                      title="Desconectar Google Drive"
+                      icon="log-out-outline"
+                      variant="danger"
+                      onPress={onDisconnectGoogleDrive}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View style={{ gap: 18 }}>
+                  <View style={{ gap: 12, paddingVertical: 4 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <Ionicons name="shield-checkmark" size={18} color={colors.positive} />
+                      <Text style={{ color: colors.text, fontSize: 13, flex: 1 }}>
+                        Cifrado seguro AES-256 (SQLCipher)
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <Ionicons name="sync" size={18} color={colors.positive} />
+                      <Text style={{ color: colors.text, fontSize: 13, flex: 1 }}>
+                        Copia automática en la nube en cada cambio
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <Ionicons name="phone-portrait-outline" size={18} color={colors.positive} />
+                      <Text style={{ color: colors.text, fontSize: 13, flex: 1 }}>
+                        Restaura tus datos si cambias de celular
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Button
+                    title="Iniciar sesión con Google"
+                    icon="logo-google"
+                    onPress={handleConnectOAuth}
+                    loading={isConnecting}
+                    disabled={isConnecting}
+                  />
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </Screen>
   );
 }
@@ -451,5 +754,47 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 8,
     marginLeft: 4,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 440,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  modalDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  connectedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
   },
 });

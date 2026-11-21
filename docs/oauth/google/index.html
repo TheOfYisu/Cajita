@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cajita — Conexión con Google Drive</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <style>
+    :root {
+      --bg: #f6f8f7;
+      --card: #ffffff;
+      --text: #111c18;
+      --muted: #52635c;
+      --accent: #123f36;
+      --accent-light: #278a68;
+      --border: #dfe7e4;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1412;
+        --card: #13211e;
+        --text: #ecf3f0;
+        --muted: #9ab0a7;
+        --accent: #34b388;
+        --accent-light: #278a68;
+        --border: #223631;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      max-width: 440px;
+      width: 100%;
+      padding: 40px 28px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    }
+    .app-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(18, 63, 54, 0.2);
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+    }
+    p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0 0 24px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-light);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: opacity 0.2s;
+      width: 100%;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .spinner {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(39, 138, 104, 0.2);
+      border-top-color: var(--accent-light);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/icon.png" alt="Cajita" class="app-icon" />
+    <div class="spinner" id="spinner"></div>
+    <h1 id="title">Conectando con Cajita</h1>
+    <p id="desc">Procesando la autorización de Google Drive y volviendo a la app...</p>
+    <a href="cajita://oauth/google" id="openBtn" class="btn">Abrir en Cajita</a>
+  </div>
+
+  <script>
+    (function () {
+      const hash = window.location.hash || "";
+      const search = window.location.search || "";
+      const params = hash ? hash : search;
+      const targetUrl = "cajita://oauth/google" + params;
+
+      const openBtn = document.getElementById("openBtn");
+      openBtn.href = targetUrl;
+
+      // Intento de redirección automática inmediata
+      try {
+        window.location.replace(targetUrl);
+      } catch (e) {
+        window.location.href = targetUrl;
+      }
+
+      // Si después de 1 segundo sigue aquí, actualiza el texto
+      setTimeout(function () {
+        const spinner = document.getElementById("spinner");
+        if (spinner) spinner.style.display = "none";
+        document.getElementById("title").textContent = "Autorización completada";
+        document.getElementById("desc").textContent = "Pulsa el botón para regresar a Cajita y completar la sincronización.";
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>

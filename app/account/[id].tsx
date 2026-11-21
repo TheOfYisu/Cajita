@@ -5,11 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/src/store/appStore';
 import { useTheme } from '@/src/theme/ThemeProvider';
 import {
-  ModalScreen, Card, Field, Button, Label, PickRow, ColorPicker, IconPicker, EmptyState, ProgressBar, Toggle, Select, SelectOption, formatMoney,
+  ModalScreen, Card, Field, Button, Label, PickRow, ColorPicker, IconPicker, EmptyState, ProgressBar, Toggle, Select, SelectOption, formatMoney, parseCurrencyInput, formatCurrencyInput,
 } from '@/src/components/ui';
 import { DateField } from '@/src/components/DateField';
 import { ACCOUNT_ICONS, IconName, safeIcon } from '@/src/theme';
-import { Account } from '@/src/db/database';
+import { Account, accountBalance } from '@/src/db/database';
+import { getAccount, updateAccount, deleteAccount, accountTypeLabel, setPrimaryAccount, closeCdt } from '@/src/services/accountService';
+import { getTransactions, deleteTransaction } from '@/src/services/transactionService';
+import { defaultAccountIcon } from '@/src/components/AccountCard';
 
 const TYPE_OPTS: SelectOption<Account['type']>[] = [
   { value: 'bank', label: 'Banco / Cuenta corriente', icon: 'business' },
@@ -20,10 +23,6 @@ const TYPE_OPTS: SelectOption<Account['type']>[] = [
   { value: 'credit_card', label: 'Tarjeta de crédito', icon: 'card' },
   { value: 'debt', label: 'Deuda', icon: 'trending-down' },
 ];
-import { getAccount, updateAccount, deleteAccount, accountTypeLabel, setPrimaryAccount, closeCdt } from '@/src/services/accountService';
-import { getTransactions, deleteTransaction } from '@/src/services/transactionService';
-import { accountBalance } from '@/src/db/database';
-import { defaultAccountIcon } from '@/src/components/AccountCard';
 
 export default function AccountDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,16 +33,17 @@ export default function AccountDetailScreen() {
   const [editing, setEditing] = React.useState(false);
 
   const [name, setName] = React.useState(account?.name ?? '');
-  const [creditLimit, setCreditLimit] = React.useState(account?.creditLimit ? String(account.creditLimit) : '');
+  const [creditLimit, setCreditLimit] = React.useState(account?.creditLimit ? formatCurrencyInput(account.creditLimit) : '');
   const [color, setColor] = React.useState(account?.color ?? colors.accent);
   const [icon, setIcon] = React.useState<IconName>((account?.icon as IconName) ?? 'wallet');
-  const [yieldAmount, setYieldAmount] = React.useState(account?.expectedYield ? String(account.expectedYield) : '');
-  const [maturity, setMaturity] = React.useState<number>(account?.maturityDate ?? Date.now() + 180 * 86400000);
+  const [yieldAmount, setYieldAmount] = React.useState(account?.expectedYield ? formatCurrencyInput(account.expectedYield) : '');
+  const [maturity, setMaturity] = React.useState<number>(() => account?.maturityDate ?? Date.now() + 180 * 86400000);
   const [isPrimary, setIsPrimary] = React.useState(!!account?.isPrimary);
   const [linkedAccount, setLinkedAccount] = React.useState<number | null>(account?.linkedAccountId ?? null);
   const [closeTarget, setCloseTarget] = React.useState<number | null>(null);
   const [type, setType] = React.useState<Account['type']>(account?.type ?? 'bank');
   const [excludeTotals, setExcludeTotals] = React.useState(!!account?.excludeFromTotals);
+  const [today] = React.useState(() => Date.now());
 
   if (!account) {
     return <ModalScreen title="Cuenta"><Text style={{ color: colors.text }}>Cuenta no encontrada</Text></ModalScreen>;
@@ -55,7 +55,9 @@ export default function AccountDetailScreen() {
   const isCredit = refType === 'credit_card';
   const isCdt = refType === 'cdt';
   const canBePrimary = refType === 'bank' || refType === 'savings';
-  const used = isCredit && account.creditLimit ? Math.max(0, account.creditLimit - balance) : 0;
+  const used = isCredit ? Math.max(0, -balance) : 0;
+  const creditLimitNum = account.creditLimit ?? 0;
+  const available = isCredit && creditLimitNum > 0 ? Math.max(0, creditLimitNum - used) : 0;
   const txns = getTransactions({ accountId: account.id, limit: 100 });
   const hide = prefs.hideBalances;
   const fundAccounts = accounts.filter((a) => a.id !== account.id && ['bank', 'savings', 'cash', 'cajita'].includes(a.type));
@@ -68,8 +70,8 @@ export default function AccountDetailScreen() {
       color,
       icon,
       excludeFromTotals: excludeTotals,
-      creditLimit: type === 'credit_card' && creditLimit ? parseFloat(creditLimit) : null,
-      expectedYield: type === 'cdt' && yieldAmount ? parseFloat(yieldAmount.replace(/[^\d.]/g, '')) : null,
+      creditLimit: type === 'credit_card' && creditLimit ? parseCurrencyInput(creditLimit) : null,
+      expectedYield: type === 'cdt' && yieldAmount ? parseCurrencyInput(yieldAmount) : null,
       maturityDate: type === 'cdt' ? maturity : null,
       linkedAccountId: type === 'cdt' ? linkedAccount : null,
     });
@@ -137,16 +139,24 @@ export default function AccountDetailScreen() {
         {isCdt ? (
           <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'center' }}>
             {account.maturityDate
-              ? (account.maturityDate <= Date.now() ? 'Vencido' : `Bloqueado hasta ${new Date(account.maturityDate).toLocaleDateString('es-CO')}`)
+              ? (account.maturityDate <= today ? 'Vencido' : `Bloqueado hasta ${new Date(account.maturityDate).toLocaleDateString('es-CO')}`)
               : 'Sin fecha de vencimiento'}
             {account.expectedYield ? ` · rinde ${formatMoney(account.expectedYield, account.currency, hide)}` : ''}
           </Text>
         ) : null}
-        {isCredit && account.creditLimit ? (
+        {isCredit && creditLimitNum > 0 ? (
           <View style={{ width: '100%', marginTop: 12 }}>
-            <ProgressBar pct={used / account.creditLimit} color={colors.negative} />
-            <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>
-              Usado {formatMoney(used, account.currency, hide)} de {formatMoney(account.creditLimit, account.currency, hide)}
+            <ProgressBar pct={Math.min(1, used / creditLimitNum)} color={colors.negative} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+              <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                Usado: <Text style={{ color: colors.negative, fontWeight: '700' }}>{formatMoney(used, account.currency, hide)}</Text>
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                Disponible: <Text style={{ color: colors.positive, fontWeight: '700' }}>{formatMoney(available, account.currency, hide)}</Text>
+              </Text>
+            </View>
+            <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4, textAlign: 'center' }}>
+              Cupo total: {formatMoney(creditLimitNum, account.currency, hide)}
             </Text>
           </View>
         ) : null}
@@ -248,7 +258,11 @@ export default function AccountDetailScreen() {
                 <Card key={t.id} style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.text, fontWeight: '600' }} numberOfLines={1}>{t.title || 'Sin título'}</Text>
-                    <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}>{new Date(t.date).toLocaleDateString('es-CO')}</Text>
+                    <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}>
+                      {new Date(t.date).toLocaleDateString('es-CO')}
+                      {t.installments ? ` · ${t.installments} cuota${t.installments > 1 ? 's' : ''}` : ''}
+                      {t.interestRate ? ` · ${t.interestRate}%` : ''}
+                    </Text>
                   </View>
                   <Text style={{ color: delta < 0 ? colors.negative : colors.positive, fontWeight: '700' }}>
                     {delta < 0 ? '-' : '+'}{formatMoney(Math.abs(delta), account.currency, hide)}

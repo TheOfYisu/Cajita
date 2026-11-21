@@ -38,6 +38,105 @@ export function formatMoney(v: number, currency = "COP", hide = false): string {
   return v < 0 ? `-${formatted}` : formatted;
 }
 
+/**
+ * Formatea una entrada numérica de dinero en tiempo real:
+ * Separa miles con puntos (.) y decimales con coma (,).
+ * Ej: "5000000" -> "5.000.000", "5000000,5" -> "5.000.000,5"
+ */
+export function formatCurrencyInput(val: string | number | null | undefined): string {
+  if (val === null || val === undefined || val === "") return "";
+  let str = String(val).trim();
+  let clean = str.replace(/[^\d.,]/g, "");
+  if (!clean) return "";
+
+  // Si tiene un punto decimal (ej. "5000.50"), lo convertimos a coma decimal es-CO:
+  if (!clean.includes(",") && clean.includes(".")) {
+    const parts = clean.split(".");
+    if (parts.length === 2 && parts[1].length <= 2) {
+      clean = parts[0] + "," + parts[1];
+    } else {
+      clean = clean.replace(/\./g, "");
+    }
+  }
+
+  const hasComma = clean.includes(",");
+  let intPart = clean;
+  let decPart = "";
+  if (hasComma) {
+    const parts = clean.split(",");
+    intPart = parts[0].replace(/\D/g, "");
+    decPart = parts.slice(1).join("").replace(/\D/g, "").slice(0, 2);
+  } else {
+    intPart = clean.replace(/\D/g, "");
+  }
+
+  if (!intPart && !decPart) return "";
+  const formattedInt = intPart ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : "0";
+  return hasComma ? `${formattedInt},${decPart}` : formattedInt;
+}
+
+/**
+ * Convierte un texto con formato monetario ("5.000.000,50" o "5000000") a número JavaScript.
+ */
+export function parseCurrencyInput(val: string | number | null | undefined): number {
+  if (typeof val === "number") return isNaN(val) ? 0 : val;
+  if (!val) return 0;
+  const clean = String(val)
+    .replace(/[^\d.,]/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+  const num = parseFloat(clean);
+  return isNaN(num) ? 0 : num;
+}
+
+export interface LoanCalculation {
+  installmentAmount: number;
+  totalPayment: number;
+  totalInterest: number;
+}
+
+/**
+ * Calcula cuota fija mensual, total a pagar y total intereses (fórmula amortización estándar / sistema francés).
+ */
+export function calculateLoanTotals(
+  principal: number,
+  installments: number,
+  monthlyInterestRatePct: number
+): LoanCalculation {
+  if (!principal || principal <= 0) {
+    return { installmentAmount: 0, totalPayment: 0, totalInterest: 0 };
+  }
+  const n = Math.max(1, Math.round(installments || 1));
+  const r = (monthlyInterestRatePct || 0) / 100;
+
+  if (r <= 0 || n <= 1) {
+    if (n === 1 && r > 0) {
+      const total = principal * (1 + r);
+      return {
+        installmentAmount: Math.round(total),
+        totalPayment: Math.round(total),
+        totalInterest: Math.round(total - principal),
+      };
+    }
+    return {
+      installmentAmount: Math.round(principal / n),
+      totalPayment: Math.round(principal),
+      totalInterest: 0,
+    };
+  }
+
+  const factor = Math.pow(1 + r, n);
+  const pmt = (principal * (r * factor)) / (factor - 1);
+  const totalPayment = pmt * n;
+  const totalInterest = totalPayment - principal;
+
+  return {
+    installmentAmount: Math.round(pmt),
+    totalPayment: Math.round(totalPayment),
+    totalInterest: Math.round(totalInterest),
+  };
+}
+
 export function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString("es-CO", {
     day: "2-digit",
@@ -323,6 +422,7 @@ export function Field({
   autoFocus,
   big,
   prefix,
+  isCurrency,
 }: {
   label?: string;
   value: string;
@@ -338,8 +438,19 @@ export function Field({
   autoFocus?: boolean;
   big?: boolean;
   prefix?: string;
+  isCurrency?: boolean;
 }) {
   const { colors, radius } = useTheme();
+  const shouldFormatCurrency = isCurrency ?? (prefix === "$" && (keyboardType === "numeric" || keyboardType === "decimal-pad"));
+
+  const handleChangeText = (text: string) => {
+    if (shouldFormatCurrency) {
+      onChangeText(formatCurrencyInput(text));
+    } else {
+      onChangeText(text);
+    }
+  };
+
   return (
     <View style={{ marginBottom: 12 }}>
       {label ? <Label>{label}</Label> : null}
@@ -367,7 +478,7 @@ export function Field({
         ) : null}
         <TextInput
           value={value}
-          onChangeText={onChangeText}
+          onChangeText={handleChangeText}
           placeholder={placeholder}
           placeholderTextColor={colors.textMuted}
           keyboardType={keyboardType}

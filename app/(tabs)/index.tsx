@@ -29,6 +29,7 @@ function monthName(): string {
 export default function HomeScreen() {
   const {
     accounts,
+    balances,
     transactions,
     netWorth,
     totalAssets,
@@ -40,6 +41,12 @@ export default function HomeScreen() {
   } = useApp();
   const { colors, prefs, updatePrefs } = useTheme();
   const hide = prefs.hideBalances;
+
+  const liquidCash = accounts
+    .filter((a) => ["bank", "savings", "cash"].includes(a.type) && !a.excludeFromTotals)
+    .reduce((sum, a) => sum + (balances[a.id] ?? 0), 0);
+  const freeToSpend = liquidCash - fixed.pendingTotal;
+
   const upcoming = getSubscriptions()
     .filter((r) => r.type === "expense" && daysUntil(r.nextRun) <= 14)
     .sort((a, b) => a.nextRun - b.nextRun)
@@ -108,6 +115,63 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
+
+        {accounts.length > 0 && (
+          <View
+            style={[
+              styles.block,
+              {
+                backgroundColor: colors.surface,
+                borderColor: freeToSpend < 0 ? colors.negative + "88" : colors.border,
+                marginTop: 2,
+                paddingVertical: 12,
+              },
+            ]}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons
+                    name="sparkles"
+                    size={13}
+                    color={freeToSpend < 0 ? colors.negative : colors.accent}
+                  />
+                  <Text style={{ color: colors.textMuted, fontSize: 12, fontWeight: "700" }}>
+                    Dinero libre para gastar
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    color: freeToSpend < 0 ? colors.negative : colors.text,
+                    fontSize: 22,
+                    fontWeight: "900",
+                    marginTop: 2,
+                  }}
+                >
+                  {formatMoney(freeToSpend, prefs.currency, hide)}
+                </Text>
+              </View>
+              <View
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 10,
+                  backgroundColor: colors.surfaceAlt,
+                  alignItems: "flex-end",
+                }}
+              >
+                <Text style={{ color: colors.textMuted, fontSize: 11 }}>
+                  Líquido: {formatMoney(liquidCash, prefs.currency, hide)}
+                </Text>
+                {fixed.pendingTotal > 0 && (
+                  <Text style={{ color: colors.negative, fontSize: 11, marginTop: 1, fontWeight: "600" }}>
+                    Fijos: -{formatMoney(fixed.pendingTotal, prefs.currency, hide)}
+                  </Text>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
 
         <View style={styles.quickRow}>
           <Quick

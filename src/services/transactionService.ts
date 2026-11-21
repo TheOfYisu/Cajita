@@ -14,6 +14,8 @@ export interface CreateTransactionInput {
   categoryUuid?: string | null;
   loanId?: number | null;
   loanUuid?: string | null;
+  installments?: number | null;
+  interestRate?: number | null;
   date?: number;
 }
 
@@ -24,13 +26,15 @@ export function createTransaction(input: CreateTransactionInput): Transaction {
   const uuid = genUuid();
   database.runSync(
     `INSERT INTO transactions (uuid, title, notes, amount, type, accountId, accountUuid,
-       toAccountId, toAccountUuid, categoryId, categoryUuid, loanId, loanUuid, date,
-       createdAt, updatedAt, syncState)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+       toAccountId, toAccountUuid, categoryId, categoryUuid, loanId, loanUuid,
+       installments, interestRate, date, createdAt, updatedAt, syncState)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     [uuid, input.title, input.notes ?? '', input.amount, input.type, input.accountId, input.accountUuid,
      input.toAccountId ?? null, input.toAccountUuid ?? null,
      input.categoryId ?? null, input.categoryUuid ?? null,
-     input.loanId ?? null, input.loanUuid ?? null, date, t, t],
+     input.loanId ?? null, input.loanUuid ?? null,
+     input.installments ?? null, input.interestRate ?? null,
+     date, t, t],
   );
   const row = database.getFirstSync<Transaction>('SELECT * FROM transactions WHERE uuid = ?', [uuid]);
   return row!;
@@ -258,7 +262,7 @@ export function updateTransaction(id: number, input: Partial<Transaction>): void
   const t = now();
   const sets: string[] = [];
   const values: SQLiteBindParams = [];
-  const allowed = ['title', 'notes', 'amount', 'type', 'accountId', 'accountUuid', 'categoryId', 'categoryUuid', 'loanId', 'loanUuid', 'date'] as const;
+  const allowed = ['title', 'notes', 'amount', 'type', 'accountId', 'accountUuid', 'categoryId', 'categoryUuid', 'loanId', 'loanUuid', 'installments', 'interestRate', 'date'] as const;
   for (const k of allowed) {
     if (input[k] !== undefined) {
       sets.push(`${k} = ?`);
@@ -272,11 +276,23 @@ export function updateTransaction(id: number, input: Partial<Transaction>): void
 
 export function deleteTransaction(id: number): void {
   const database = getDb();
+  const tx = database.getFirstSync<Transaction>('SELECT * FROM transactions WHERE id = ?', [id]);
+  if (!tx) return;
   const t = now();
   database.runSync(
     `UPDATE transactions SET deletedAt = ?, updatedAt = ?, syncState = 'deleted' WHERE id = ?`,
     [t, t, id],
   );
+  if (tx.type === 'transfer' && tx.toAccountId != null) {
+    // Si es una transferencia interna entre cuentas, elimina automáticamente la contraparte
+    database.runSync(
+      `UPDATE transactions
+       SET deletedAt = ?, updatedAt = ?, syncState = 'deleted'
+       WHERE deletedAt IS NULL AND type = 'transfer'
+         AND accountId = ? AND toAccountId = ? AND ABS(amount) = ? AND date = ?`,
+      [t, t, tx.toAccountId, tx.accountId, Math.abs(tx.amount), tx.date],
+    );
+  }
 }
 
 /**

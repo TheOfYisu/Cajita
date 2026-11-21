@@ -17,23 +17,23 @@ export function AppLockGate({ children }: { children: React.ReactNode }) {
   const backgroundedAt = React.useRef<number | null>(null);
   const promptingRef = React.useRef(false);
 
+  const isLocked = enabled && locked;
+
   React.useEffect(() => {
     getBiometricCapability().then(setCap);
   }, []);
-
-  // Si el usuario activa/desactiva el bloqueo en Ajustes.
-  React.useEffect(() => {
-    if (!enabled) setLocked(false);
-  }, [enabled]);
 
   const tryUnlock = React.useCallback(async () => {
     if (promptingRef.current) return;
     promptingRef.current = true;
     setBusy(true);
-    const ok = await authenticate('Desbloquea Cajita');
-    setBusy(false);
-    promptingRef.current = false;
-    if (ok) setLocked(false);
+    try {
+      const ok = await authenticate('Desbloquea Cajita');
+      if (ok) setLocked(false);
+    } finally {
+      setBusy(false);
+      promptingRef.current = false;
+    }
   }, []);
 
   // Re-bloqueo al volver de segundo plano.
@@ -53,10 +53,12 @@ export function AppLockGate({ children }: { children: React.ReactNode }) {
 
   // Auto-prompt al entrar en estado bloqueado.
   React.useEffect(() => {
-    if (locked && enabled) tryUnlock();
-  }, [locked, enabled, tryUnlock]);
+    if (isLocked) {
+      void tryUnlock();
+    }
+  }, [isLocked, tryUnlock]);
 
-  if (!locked) return <>{children}</>;
+  if (!isLocked) return <>{children}</>;
 
   const method = cap ? biometricLabel(cap) : 'biometría';
 

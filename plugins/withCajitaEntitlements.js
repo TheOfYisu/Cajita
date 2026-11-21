@@ -43,6 +43,8 @@ class SceneDelegate: ExpoAppSceneDelegate {
       return "/transaction/new?mode=transfer"
     case "com.cajita.app.cash":
       return "/cash"
+    case "com.cajita.app.quick-action":
+      return "/quick-action"
     default:
       return nil
     }

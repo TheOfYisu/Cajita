@@ -29,7 +29,8 @@ export default function PayFixedScreen() {
     recurring?.accountId ?? accounts.find((a) => a.type === 'cash')?.id ?? accounts[0]?.id ?? null,
   );
   const [categoryId, setCategoryId] = React.useState<number | null>(recurring?.categoryId ?? null);
-  const [date, setDate] = React.useState<number>(payment?.paidAt ?? Date.now());
+  const [nowTs] = React.useState(() => Date.now());
+  const [date, setDate] = React.useState<number>(payment?.paidAt ?? nowTs);
 
   if (!payment || !recurring) {
     return <ModalScreen title="Pago"><Text style={{ color: colors.text }}>No encontrado</Text></ModalScreen>;

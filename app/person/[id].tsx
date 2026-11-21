@@ -8,7 +8,7 @@ import { ModalScreen, Card, Field, Button, Label, PickRow, formatMoney } from '@
 import { safeIcon } from '@/src/theme';
 import { DateField } from '@/src/components/DateField';
 import { getPerson, deletePerson, updatePerson } from '@/src/services/personService';
-import { createLoan, getLoan, deleteLoan, loanBalance } from '@/src/services/loanService';
+import { createLoan, getLoan, loanBalance } from '@/src/services/loanService';
 import { createTransaction } from '@/src/services/transactionService';
 
 export default function PersonDetailScreen() {
@@ -30,7 +30,7 @@ export default function PersonDetailScreen() {
   const [newLoanType, setNewLoanType] = React.useState<'lent' | 'borrowed'>('lent');
   const [account, setAccount] = React.useState<number | null>(null);
   const [payment, setPayment] = React.useState('');
-  const [date, setDate] = React.useState<number>(Date.now());
+  const [date, setDate] = React.useState<number>(() => Date.now());
 
   if (!person) {
     return <ModalScreen title="Persona"><Text style={{ color: colors.text }}>No encontrada</Text></ModalScreen>;

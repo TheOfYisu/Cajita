@@ -19,7 +19,7 @@ export default function NewWithdrawalScreen() {
   const [note, setNote] = React.useState('');
   const [fromId, setFromId] = React.useState<number | null>(bankAccounts[0]?.id ?? null);
   const [toId, setToId] = React.useState<number | null>(cashAccounts[0]?.id ?? null);
-  const [date, setDate] = React.useState<number>(Date.now());
+  const [date, setDate] = React.useState<number>(() => Date.now());
 
   const opts = (list: typeof accounts): SelectOption<number>[] =>
     list.map((a) => ({ value: a.id, label: a.name, icon: safeIcon(a.icon), color: a.color }));

@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert } from "react-native";
+import { Alert, View, Text } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useApp } from "@/src/store/appStore";
 import { useTheme } from "@/src/theme/ThemeProvider";
@@ -10,10 +10,26 @@ import {
   Button,
   Label,
   PickRow,
+  Select,
+  SelectOption,
+  parseCurrencyInput,
+  calculateLoanTotals,
+  formatMoney,
 } from "@/src/components/ui";
 import { DateField } from "@/src/components/DateField";
 import { createLoan } from "@/src/services/loanService";
 import { createPerson } from "@/src/services/personService";
+
+const LOAN_TYPE_OPTS: SelectOption<string>[] = [
+  { value: "libre_inversion", label: "Libre inversión / Consumo", icon: "cash", color: "#3B82F6" },
+  { value: "tarjeta", label: "Tarjeta de crédito", icon: "card", color: "#EF4444" },
+  { value: "hipotecario", label: "Hipotecario / Vivienda", icon: "home", color: "#10B981" },
+  { value: "vehiculo", label: "Vehicular", icon: "car", color: "#F59E0B" },
+  { value: "personal", label: "Préstamo personal", icon: "person", color: "#8B5CF6" },
+  { value: "educativo", label: "Educativo", icon: "school", color: "#06B6D4" },
+  { value: "comercial", label: "Comercial / Negocio", icon: "briefcase", color: "#6366F1" },
+  { value: "otro", label: "Otro tipo", icon: "ellipsis-horizontal", color: "#6B7280" },
+];
 
 export default function NewLoanScreen() {
   const params = useLocalSearchParams<{ type?: string; kind?: string }>();
@@ -33,21 +49,32 @@ export default function NewLoanScreen() {
           : "entity",
   );
 
+  const [loanType, setLoanType] = React.useState<string>("libre_inversion");
   const [entityName, setEntityName] = React.useState("");
   const [personId, setPersonId] = React.useState<number | null>(null);
   const [newPersonName, setNewPersonName] = React.useState("");
   const [total, setTotal] = React.useState("");
   const [offset, setOffset] = React.useState("");
+  const [interestRate, setInterestRate] = React.useState("");
+  const [installments, setInstallments] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [date, setDate] = React.useState<number>(Date.now());
+  const [date, setDate] = React.useState<number>(() => Date.now());
 
   const setTypeAndKind = (t: "borrowed" | "lent") => {
     setType(t);
     if (t === "lent") setKind("person");
   };
 
+  const principalNum = parseCurrencyInput(total);
+  const instNum = installments.trim() ? parseInt(installments.replace(/\D/g, ""), 10) : 1;
+  const rateNum = interestRate.trim() ? parseFloat(interestRate.replace(",", ".")) : 0;
+
+  const calc = React.useMemo(() => {
+    return calculateLoanTotals(principalNum, instNum, rateNum);
+  }, [principalNum, instNum, rateNum]);
+
   const save = () => {
-    const t = parseFloat(total.replace(/[^\d.]/g, ""));
+    const t = parseCurrencyInput(total);
     if (!t || t <= 0) {
       Alert.alert("Monto inválido");
       return;
@@ -79,12 +106,23 @@ export default function NewLoanScreen() {
       }
     }
 
+    const rNum = interestRate.trim() ? parseFloat(interestRate.replace(',', '.')) : null;
+    const iNum = installments.trim() ? parseInt(installments.replace(/\D/g, ''), 10) : null;
+    const finalOffset = offset.trim()
+      ? parseCurrencyInput(offset)
+      : calc.totalInterest > 0
+        ? calc.totalInterest
+        : 0;
+
     createLoan({
       name,
       type,
       counterpartyKind: kind,
+      loanType,
       total: t,
-      totalOffset: offset ? parseFloat(offset.replace(/[^\d.]/g, "")) : 0,
+      totalOffset: finalOffset,
+      interestRate: rNum && !isNaN(rNum) ? rNum : null,
+      installments: iNum && !isNaN(iNum) ? iNum : null,
       personId: pid,
       notes: description.trim(),
       startDate: date,
@@ -183,6 +221,15 @@ export default function NewLoanScreen() {
       )}
 
       <Card style={{ marginBottom: 12 }}>
+        <Select
+          label="Tipo de deuda o crédito"
+          value={loanType}
+          options={LOAN_TYPE_OPTS}
+          onChange={setLoanType}
+        />
+      </Card>
+
+      <Card style={{ marginBottom: 12 }}>
         <Field
           label="Monto total"
           value={total}
@@ -192,9 +239,25 @@ export default function NewLoanScreen() {
           big
         />
         <Field
-          label="Intereses / ajuste (opcional)"
+          label="Número de cuotas (opcional)"
+          value={installments}
+          onChangeText={setInstallments}
+          placeholder="Ej: 12, 24, 36..."
+          keyboardType="numeric"
+        />
+        <Field
+          label="Tasa de interés % (opcional)"
+          value={interestRate}
+          onChangeText={setInterestRate}
+          placeholder="Ej: 1.8"
+          keyboardType="decimal-pad"
+          prefix="%"
+        />
+        <Field
+          label="Intereses / ajuste en dinero (opcional)"
           value={offset}
           onChangeText={setOffset}
+          placeholder={calc.totalInterest > 0 ? `Calculado: +$ ${formatMoney(calc.totalInterest, 'COP')}` : undefined}
           keyboardType="numeric"
           prefix="$"
         />
@@ -207,6 +270,34 @@ export default function NewLoanScreen() {
         />
         <DateField label="Fecha" value={date} onChange={setDate} />
       </Card>
+
+      {principalNum > 0 && (instNum > 1 || rateNum > 0) ? (
+        <Card style={{ marginBottom: 12, backgroundColor: colors.accent + '18', borderColor: colors.accent }}>
+          <Text style={{ color: colors.accent, fontWeight: '800', fontSize: 13, marginBottom: 8 }}>
+            PROYECCIÓN TOTAL A PAGAR
+          </Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: '600' }}>Total a pagar:</Text>
+            <Text style={{ color: colors.negative, fontSize: 24, fontWeight: '900' }}>
+              {formatMoney(calc.totalPayment, 'COP')}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+            <Text style={{ color: colors.textMuted, fontSize: 13 }}>Cuota mensual ({instNum} cuota{instNum > 1 ? 's' : ''}):</Text>
+            <Text style={{ color: colors.text, fontWeight: '700', fontSize: 13 }}>
+              {formatMoney(calc.installmentAmount, 'COP')} / mes
+            </Text>
+          </View>
+          {calc.totalInterest > 0 ? (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ color: colors.textMuted, fontSize: 13 }}>Intereses estimados:</Text>
+              <Text style={{ color: colors.negative, fontWeight: '700', fontSize: 13 }}>
+                +{formatMoney(calc.totalInterest, 'COP')}
+              </Text>
+            </View>
+          ) : null}
+        </Card>
+      ) : null}
     </ModalScreen>
   );
 }
